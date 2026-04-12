@@ -3,6 +3,7 @@ import { MoreHorizontal } from "lucide-react";
 import { useState } from "react";
 
 interface PhotoCardProps {
+  id: string;
   image: string;
   caption?: string;
   username: string;
@@ -11,7 +12,7 @@ interface PhotoCardProps {
   iso?: string;
 }
 
-const PhotoCard = ({ image, caption, username, gear, aperture, iso }: PhotoCardProps) => {
+const PhotoCard = ({ id, image, caption, username, gear, aperture, iso }: PhotoCardProps) => {
   const [showMenu, setShowMenu] = useState(false);
 
   return (
@@ -26,12 +27,14 @@ const PhotoCard = ({ image, caption, username, gear, aperture, iso }: PhotoCardP
         </button>
       )}
 
-      <img
-        src={image}
-        alt={caption || "Community photo"}
-        className="w-full object-cover"
-        loading="lazy"
-      />
+      <Link to={`/photo/${id}`}>
+        <img
+          src={image}
+          alt={caption || "Community photo"}
+          className="w-full cursor-pointer object-cover transition-opacity hover:opacity-90"
+          loading="lazy"
+        />
+      </Link>
 
       <div className="p-3">
         {caption && (
