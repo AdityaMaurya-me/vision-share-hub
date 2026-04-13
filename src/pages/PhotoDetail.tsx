@@ -1,4 +1,4 @@
-import { useParams, Link } from "react-router-dom";
+import { useParams, Link, useNavigate } from "react-router-dom";
 import { useState } from "react";
 import Navbar from "@/components/Navbar";
 import PhotoCard from "@/components/PhotoCard";
@@ -49,14 +49,14 @@ const PhotoDetail = () => {
       <Navbar />
 
       <div className="container max-w-6xl py-8">
-        {/* Back link */}
-        <Link
-          to="/"
+        {/* Back button */}
+        <button
+          onClick={() => navigate(-1)}
           className="mb-6 inline-flex items-center gap-2 text-sm text-muted-foreground transition-colors hover:text-foreground"
         >
           <ArrowLeft className="h-4 w-4" />
-          Back to gallery
-        </Link>
+          Back
+        </button>
 
         <div className="grid gap-8 lg:grid-cols-[1fr_380px]">
           {/* Main image */}
