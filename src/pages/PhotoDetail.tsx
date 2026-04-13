@@ -10,6 +10,7 @@ import { ArrowLeft, UserPlus, Send, Camera, Aperture, Gauge } from "lucide-react
 
 const PhotoDetail = () => {
   const { id } = useParams<{ id: string }>();
+  const navigate = useNavigate();
   const photo = samplePhotos.find((p) => p.id === id);
   const [commentText, setCommentText] = useState("");
   const [isFollowing, setIsFollowing] = useState(false);
