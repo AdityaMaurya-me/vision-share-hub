@@ -171,29 +171,38 @@ const PhotoDetail = () => {
                 ))}
               </div>
 
-              <div className="flex gap-2">
-                <Textarea
-                  value={commentText}
-                  onChange={(e) => setCommentText(e.target.value)}
-                  placeholder="Add a comment…"
-                  className="min-h-[40px] resize-none bg-secondary text-sm"
-                  rows={1}
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter" && !e.shiftKey) {
-                      e.preventDefault();
-                      handleComment();
-                    }
-                  }}
-                />
-                <Button
-                  size="icon"
-                  onClick={handleComment}
-                  disabled={!commentText.trim()}
-                  className="shrink-0"
+              {user ? (
+                <div className="flex gap-2">
+                  <Textarea
+                    value={commentText}
+                    onChange={(e) => setCommentText(e.target.value)}
+                    placeholder="Add a comment…"
+                    className="min-h-[40px] resize-none bg-secondary text-sm"
+                    rows={1}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter" && !e.shiftKey) {
+                        e.preventDefault();
+                        handleComment();
+                      }
+                    }}
+                  />
+                  <Button
+                    size="icon"
+                    onClick={handleComment}
+                    disabled={!commentText.trim()}
+                    className="shrink-0"
+                  >
+                    <Send className="h-4 w-4" />
+                  </Button>
+                </div>
+              ) : (
+                <button
+                  onClick={() => setShowAuthDialog(true)}
+                  className="w-full rounded-lg border border-border bg-secondary px-4 py-2.5 text-left text-sm text-muted-foreground transition-colors hover:border-primary/50 hover:text-foreground"
                 >
-                  <Send className="h-4 w-4" />
-                </Button>
-              </div>
+                  Log in to add a comment…
+                </button>
+              )}
             </div>
           </div>
         </div>
