@@ -224,6 +224,26 @@ const PhotoDetail = () => {
           </section>
         )}
       </div>
+
+      {/* Auth Dialog */}
+      <Dialog open={showAuthDialog} onOpenChange={setShowAuthDialog}>
+        <DialogContent className="sm:max-w-sm">
+          <DialogHeader>
+            <DialogTitle>Sign in to comment</DialogTitle>
+            <DialogDescription>
+              You need to be logged in to add comments. Please log in or create an account.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="flex flex-col gap-3 pt-2">
+            <Button onClick={() => navigate("/login")} className="w-full">
+              Log In
+            </Button>
+            <Button variant="outline" onClick={() => navigate("/signup")} className="w-full">
+              Sign Up
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
