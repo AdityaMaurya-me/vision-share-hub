@@ -7,13 +7,23 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { ArrowLeft, UserPlus, Send, Camera, Aperture, Gauge } from "lucide-react";
+import { useAuth } from "@/contexts/AuthContext";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from "@/components/ui/dialog";
 
 const PhotoDetail = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const { user } = useAuth();
   const photo = samplePhotos.find((p) => p.id === id);
   const [commentText, setCommentText] = useState("");
   const [isFollowing, setIsFollowing] = useState(false);
+  const [showAuthDialog, setShowAuthDialog] = useState(false);
   const [comments, setComments] = useState<{ user: string; text: string }[]>([
     { user: "pixel_hunter", text: "Incredible composition! The light is perfect." },
     { user: "analog_soul", text: "What time of day was this shot?" },
@@ -52,7 +62,13 @@ const PhotoDetail = () => {
       <div className="container max-w-6xl py-8">
         {/* Back button */}
         <button
-          onClick={() => navigate(-1)}
+          onClick={() => {
+            if (window.history.length > 1) {
+              navigate(-1);
+            } else {
+              navigate("/");
+            }
+          }}
           className="mb-6 inline-flex items-center gap-2 text-sm text-muted-foreground transition-colors hover:text-foreground"
         >
           <ArrowLeft className="h-4 w-4" />
@@ -155,29 +171,38 @@ const PhotoDetail = () => {
                 ))}
               </div>
 
-              <div className="flex gap-2">
-                <Textarea
-                  value={commentText}
-                  onChange={(e) => setCommentText(e.target.value)}
-                  placeholder="Add a comment…"
-                  className="min-h-[40px] resize-none bg-secondary text-sm"
-                  rows={1}
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter" && !e.shiftKey) {
-                      e.preventDefault();
-                      handleComment();
-                    }
-                  }}
-                />
-                <Button
-                  size="icon"
-                  onClick={handleComment}
-                  disabled={!commentText.trim()}
-                  className="shrink-0"
+              {user ? (
+                <div className="flex gap-2">
+                  <Textarea
+                    value={commentText}
+                    onChange={(e) => setCommentText(e.target.value)}
+                    placeholder="Add a comment…"
+                    className="min-h-[40px] resize-none bg-secondary text-sm"
+                    rows={1}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter" && !e.shiftKey) {
+                        e.preventDefault();
+                        handleComment();
+                      }
+                    }}
+                  />
+                  <Button
+                    size="icon"
+                    onClick={handleComment}
+                    disabled={!commentText.trim()}
+                    className="shrink-0"
+                  >
+                    <Send className="h-4 w-4" />
+                  </Button>
+                </div>
+              ) : (
+                <button
+                  onClick={() => setShowAuthDialog(true)}
+                  className="w-full rounded-lg border border-border bg-secondary px-4 py-2.5 text-left text-sm text-muted-foreground transition-colors hover:border-primary/50 hover:text-foreground"
                 >
-                  <Send className="h-4 w-4" />
-                </Button>
-              </div>
+                  Log in to add a comment…
+                </button>
+              )}
             </div>
           </div>
         </div>
@@ -199,6 +224,26 @@ const PhotoDetail = () => {
           </section>
         )}
       </div>
+
+      {/* Auth Dialog */}
+      <Dialog open={showAuthDialog} onOpenChange={setShowAuthDialog}>
+        <DialogContent className="sm:max-w-sm">
+          <DialogHeader>
+            <DialogTitle>Sign in to comment</DialogTitle>
+            <DialogDescription>
+              You need to be logged in to add comments. Please log in or create an account.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="flex flex-col gap-3 pt-2">
+            <Button onClick={() => navigate("/login")} className="w-full">
+              Log In
+            </Button>
+            <Button variant="outline" onClick={() => navigate("/signup")} className="w-full">
+              Sign Up
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
