@@ -23,6 +23,7 @@ const PhotoDetail = () => {
   const photo = samplePhotos.find((p) => p.id === id);
   const [commentText, setCommentText] = useState("");
   const [isFollowing, setIsFollowing] = useState(false);
+  const [showAuthDialog, setShowAuthDialog] = useState(false);
   const [comments, setComments] = useState<{ user: string; text: string }[]>([
     { user: "pixel_hunter", text: "Incredible composition! The light is perfect." },
     { user: "analog_soul", text: "What time of day was this shot?" },
