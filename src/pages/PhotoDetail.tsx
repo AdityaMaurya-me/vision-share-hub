@@ -113,7 +113,13 @@ const PhotoDetail = () => {
                 <Button
                   variant={isFollowing ? "secondary" : "default"}
                   size="sm"
-                  onClick={() => setIsFollowing(!isFollowing)}
+                  onClick={() => {
+                    if (!user) {
+                      setShowAuthDialog(true);
+                      return;
+                    }
+                    setIsFollowing(!isFollowing);
+                  }}
                   className="gap-1.5"
                 >
                   <UserPlus className="h-3.5 w-3.5" />

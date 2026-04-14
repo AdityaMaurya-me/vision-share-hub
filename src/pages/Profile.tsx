@@ -14,6 +14,7 @@ const Profile = () => {
   const { user } = useAuth();
   const [profile, setProfile] = useState<{ username: string; avatar_url: string | null; bio: string | null } | null>(null);
   const [editing, setEditing] = useState(false);
+  const [savedPhotoIds, setSavedPhotoIds] = useState<string[]>([]);
 
   useEffect(() => {
     if (!user) return;
@@ -25,7 +26,17 @@ const Profile = () => {
       .then(({ data }) => {
         if (data) setProfile(data);
       });
+
+    supabase
+      .from("saved_photos")
+      .select("photo_id")
+      .eq("user_id", user.id)
+      .then(({ data }) => {
+        if (data) setSavedPhotoIds(data.map((d) => d.photo_id));
+      });
   }, [user]);
+
+  const savedPhotos = samplePhotos.filter((p) => savedPhotoIds.includes(p.id));
 
   const handleShare = () => {
     navigator.clipboard.writeText(window.location.href);
@@ -57,7 +68,7 @@ const Profile = () => {
                   <p className="text-sm text-muted-foreground">Uploaded</p>
                 </div>
                 <div className="text-center">
-                  <p className="text-xl font-bold">0</p>
+                  <p className="text-xl font-bold">{savedPhotoIds.length}</p>
                   <p className="text-sm text-muted-foreground">Saved</p>
                 </div>
               </div>
@@ -83,6 +94,7 @@ const Profile = () => {
           <div className="flex items-center justify-between mb-4">
             <TabsList className="bg-secondary">
               <TabsTrigger value="uploads">My Uploads</TabsTrigger>
+              <TabsTrigger value="saved">Saved</TabsTrigger>
               <TabsTrigger value="kit">My Kit</TabsTrigger>
             </TabsList>
             <Button size="sm" className="gradient-bg border-0 text-primary-foreground">
@@ -98,6 +110,21 @@ const Profile = () => {
                 <p className="text-sm">Share your first photo with the community!</p>
               </div>
             </div>
+          </TabsContent>
+
+          <TabsContent value="saved">
+            {savedPhotos.length > 0 ? (
+              <div className="masonry-grid">
+                {savedPhotos.map((photo) => (
+                  <PhotoCard key={photo.id} {...photo} />
+                ))}
+              </div>
+            ) : (
+              <div className="flex flex-col items-center justify-center py-16 text-muted-foreground">
+                <p className="text-lg font-medium">No saved photos</p>
+                <p className="text-sm">Bookmark photos from the gallery to see them here!</p>
+              </div>
+            )}
           </TabsContent>
 
           <TabsContent value="kit">
