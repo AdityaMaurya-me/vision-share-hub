@@ -68,7 +68,7 @@ const Profile = () => {
                   <p className="text-sm text-muted-foreground">Uploaded</p>
                 </div>
                 <div className="text-center">
-                  <p className="text-xl font-bold">0</p>
+                  <p className="text-xl font-bold">{savedPhotoIds.length}</p>
                   <p className="text-sm text-muted-foreground">Saved</p>
                 </div>
               </div>
@@ -94,6 +94,7 @@ const Profile = () => {
           <div className="flex items-center justify-between mb-4">
             <TabsList className="bg-secondary">
               <TabsTrigger value="uploads">My Uploads</TabsTrigger>
+              <TabsTrigger value="saved">Saved</TabsTrigger>
               <TabsTrigger value="kit">My Kit</TabsTrigger>
             </TabsList>
             <Button size="sm" className="gradient-bg border-0 text-primary-foreground">
