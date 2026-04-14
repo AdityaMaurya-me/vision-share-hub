@@ -14,6 +14,7 @@ const Profile = () => {
   const { user } = useAuth();
   const [profile, setProfile] = useState<{ username: string; avatar_url: string | null; bio: string | null } | null>(null);
   const [editing, setEditing] = useState(false);
+  const [savedPhotoIds, setSavedPhotoIds] = useState<string[]>([]);
 
   useEffect(() => {
     if (!user) return;
@@ -25,7 +26,17 @@ const Profile = () => {
       .then(({ data }) => {
         if (data) setProfile(data);
       });
+
+    supabase
+      .from("saved_photos")
+      .select("photo_id")
+      .eq("user_id", user.id)
+      .then(({ data }) => {
+        if (data) setSavedPhotoIds(data.map((d) => d.photo_id));
+      });
   }, [user]);
+
+  const savedPhotos = samplePhotos.filter((p) => savedPhotoIds.includes(p.id));
 
   const handleShare = () => {
     navigator.clipboard.writeText(window.location.href);
