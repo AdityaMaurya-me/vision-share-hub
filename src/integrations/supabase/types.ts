@@ -14,6 +14,45 @@ export type Database = {
   }
   public: {
     Tables: {
+      photos: {
+        Row: {
+          aperture: string | null
+          caption: string | null
+          created_at: string
+          gear_name: string | null
+          id: string
+          image_url: string
+          iso: string | null
+          shutter_speed: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          aperture?: string | null
+          caption?: string | null
+          created_at?: string
+          gear_name?: string | null
+          id?: string
+          image_url: string
+          iso?: string | null
+          shutter_speed?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          aperture?: string | null
+          caption?: string | null
+          created_at?: string
+          gear_name?: string | null
+          id?: string
+          image_url?: string
+          iso?: string | null
+          shutter_speed?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           avatar_url: string | null

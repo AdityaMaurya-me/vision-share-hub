@@ -1,20 +1,32 @@
 import { useState, useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
+import { Link } from "react-router-dom";
 import Navbar from "@/components/Navbar";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Share2 } from "lucide-react";
+import { Share2, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import PhotoCard from "@/components/PhotoCard";
 import { samplePhotos } from "@/data/samplePhotos";
+
+interface UploadedPhoto {
+  id: string;
+  image_url: string;
+  caption: string | null;
+  gear_name: string | null;
+  aperture: string | null;
+  iso: string | null;
+  created_at: string;
+}
 
 const Profile = () => {
   const { user } = useAuth();
   const [profile, setProfile] = useState<{ username: string; avatar_url: string | null; bio: string | null } | null>(null);
   const [editing, setEditing] = useState(false);
   const [savedPhotoIds, setSavedPhotoIds] = useState<string[]>([]);
+  const [uploads, setUploads] = useState<UploadedPhoto[]>([]);
 
   useEffect(() => {
     if (!user) return;
@@ -34,6 +46,15 @@ const Profile = () => {
       .then(({ data }) => {
         if (data) setSavedPhotoIds(data.map((d) => d.photo_id));
       });
+
+    supabase
+      .from("photos")
+      .select("id, image_url, caption, gear_name, aperture, iso, created_at")
+      .eq("user_id", user.id)
+      .order("created_at", { ascending: false })
+      .then(({ data }) => {
+        if (data) setUploads(data);
+      });
   }, [user]);
 
   const savedPhotos = samplePhotos.filter((p) => savedPhotoIds.includes(p.id));
@@ -41,6 +62,17 @@ const Profile = () => {
   const handleShare = () => {
     navigator.clipboard.writeText(window.location.href);
     toast.success("Profile link copied!");
+  };
+
+  const handleDeleteUpload = async (photoId: string) => {
+    if (!confirm("Delete this photo?")) return;
+    const { error } = await supabase.from("photos").delete().eq("id", photoId);
+    if (error) {
+      toast.error("Failed to delete");
+    } else {
+      setUploads((prev) => prev.filter((p) => p.id !== photoId));
+      toast.success("Photo deleted");
+    }
   };
 
   const username = profile?.username || user?.email || "User";
@@ -64,7 +96,7 @@ const Profile = () => {
               <h1 className="text-2xl font-bold">{username}</h1>
               <div className="flex gap-8">
                 <div className="text-center">
-                  <p className="text-xl font-bold">0</p>
+                  <p className="text-xl font-bold">{uploads.length}</p>
                   <p className="text-sm text-muted-foreground">Uploaded</p>
                 </div>
                 <div className="text-center">
@@ -97,19 +129,40 @@ const Profile = () => {
               <TabsTrigger value="saved">Saved</TabsTrigger>
               <TabsTrigger value="kit">My Kit</TabsTrigger>
             </TabsList>
-            <Button size="sm" className="gradient-bg border-0 text-primary-foreground">
-              Upload
+            <Button size="sm" className="gradient-bg border-0 text-primary-foreground" asChild>
+              <Link to="/upload">Upload</Link>
             </Button>
           </div>
 
           <TabsContent value="uploads">
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
-              {/* Empty state – user hasn't uploaded yet */}
-              <div className="col-span-full flex flex-col items-center justify-center py-16 text-muted-foreground">
+            {uploads.length > 0 ? (
+              <div className="masonry-grid">
+                {uploads.map((photo) => (
+                  <div key={photo.id} className="break-inside-avoid mb-4 group relative rounded-xl overflow-hidden border border-border bg-secondary">
+                    <img src={photo.image_url} alt={photo.caption || "Upload"} className="w-full" />
+                    <div className="p-3 space-y-1">
+                      {photo.caption && <p className="text-sm italic text-muted-foreground">{photo.caption}</p>}
+                      {photo.gear_name && <p className="text-xs text-muted-foreground">{photo.gear_name}</p>}
+                      <div className="flex gap-2">
+                        {photo.aperture && <span className="text-[10px] px-1.5 py-0.5 rounded bg-background text-muted-foreground">{photo.aperture}</span>}
+                        {photo.iso && <span className="text-[10px] px-1.5 py-0.5 rounded bg-background text-muted-foreground">ISO {photo.iso}</span>}
+                      </div>
+                    </div>
+                    <button
+                      onClick={() => handleDeleteUpload(photo.id)}
+                      className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity bg-destructive text-destructive-foreground rounded-full p-1.5"
+                    >
+                      <Trash2 className="h-3.5 w-3.5" />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="flex flex-col items-center justify-center py-16 text-muted-foreground">
                 <p className="text-lg font-medium">No uploads yet</p>
                 <p className="text-sm">Share your first photo with the community!</p>
               </div>
-            </div>
+            )}
           </TabsContent>
 
           <TabsContent value="saved">
