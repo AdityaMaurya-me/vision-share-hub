@@ -51,13 +51,21 @@ const VibeMatcher = () => {
           })}
         </div>
 
-        <div className="mt-8">
+        <div className="mt-8 flex gap-3">
           <Button
             disabled={selected.length === 0}
             className="gradient-bg border-0 text-primary-foreground disabled:opacity-40"
           >
             Find My Gear
           </Button>
+          {selected.length > 0 && (
+            <Button
+              variant="outline"
+              onClick={() => setSelected([])}
+            >
+              Reset All
+            </Button>
+          )}
         </div>
       </main>
     </div>
