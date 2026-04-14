@@ -112,6 +112,21 @@ const Profile = () => {
             </div>
           </TabsContent>
 
+          <TabsContent value="saved">
+            {savedPhotos.length > 0 ? (
+              <div className="masonry-grid">
+                {savedPhotos.map((photo) => (
+                  <PhotoCard key={photo.id} {...photo} />
+                ))}
+              </div>
+            ) : (
+              <div className="flex flex-col items-center justify-center py-16 text-muted-foreground">
+                <p className="text-lg font-medium">No saved photos</p>
+                <p className="text-sm">Bookmark photos from the gallery to see them here!</p>
+              </div>
+            )}
+          </TabsContent>
+
           <TabsContent value="kit">
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
               <div className="col-span-full flex flex-col items-center justify-center py-16 text-muted-foreground">
