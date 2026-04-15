@@ -30,6 +30,9 @@ const Navbar = () => {
           <Link to="/" className="text-sm font-medium text-muted-foreground transition-colors hover:text-foreground">
             Home
           </Link>
+          <Link to="/explore" className="text-sm font-medium text-muted-foreground transition-colors hover:text-foreground">
+            Explore
+          </Link>
           <Link to="/vibe-matcher" className="text-sm font-medium text-muted-foreground transition-colors hover:text-foreground">
             Vibe Matcher
           </Link>

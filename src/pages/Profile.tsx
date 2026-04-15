@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import useScrollRestore from "@/hooks/useScrollRestore";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { Link } from "react-router-dom";
@@ -22,6 +23,7 @@ interface UploadedPhoto {
 }
 
 const Profile = () => {
+  useScrollRestore();
   const { user } = useAuth();
   const [profile, setProfile] = useState<{ username: string; avatar_url: string | null; bio: string | null } | null>(null);
   const [editing, setEditing] = useState(false);

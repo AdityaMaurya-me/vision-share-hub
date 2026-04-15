@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import useScrollRestore from "@/hooks/useScrollRestore";
 import { useSearchParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import Navbar from "@/components/Navbar";
@@ -19,6 +20,7 @@ interface DbPhoto {
 }
 
 const VibeMatcher = () => {
+  useScrollRestore();
   const [searchParams] = useSearchParams();
   const [selected, setSelected] = useState<string[]>(() => {
     const vibe = searchParams.get("vibe");

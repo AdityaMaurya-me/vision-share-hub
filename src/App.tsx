@@ -12,6 +12,7 @@ import VibeMatcher from "./pages/VibeMatcher";
 import PhotoDetail from "./pages/PhotoDetail";
 import Profile from "./pages/Profile";
 import Upload from "./pages/Upload";
+import Explore from "./pages/Explore";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -27,6 +28,7 @@ const App = () => (
             <Route path="/" element={<Index />} />
             <Route path="/login" element={<Login />} />
             <Route path="/signup" element={<Signup />} />
+            <Route path="/explore" element={<Explore />} />
             <Route path="/vibe-matcher" element={<VibeMatcher />} />
             <Route path="/photo/:id" element={<PhotoDetail />} />
             <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
