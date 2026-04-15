@@ -141,9 +141,9 @@ const PhotoDetail = () => {
     <div className="min-h-screen bg-background">
       <Navbar />
 
-      <div className="container max-w-6xl py-8">
+      <div className="container max-w-6xl pt-24 pb-8">
         <button
-          onClick={() => (window.history.length > 1 ? navigate(-1) : navigate("/"))}
+          onClick={() => navigate(-1)}
           className="mb-6 inline-flex items-center gap-2 text-sm text-muted-foreground transition-colors hover:text-foreground"
         >
           <ArrowLeft className="h-4 w-4" />
