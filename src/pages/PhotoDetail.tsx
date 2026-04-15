@@ -3,18 +3,24 @@ import { useState } from "react";
 import Navbar from "@/components/Navbar";
 import PhotoCard from "@/components/PhotoCard";
 import { samplePhotos } from "@/data/samplePhotos";
+import { vibes } from "@/data/vibes";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { ArrowLeft, UserPlus, Send, Camera, Aperture, Gauge } from "lucide-react";
-import { useAuth } from "@/contexts/AuthContext";
 import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
+  ArrowLeft, UserPlus, Send, Camera, Aperture, Gauge,
+  Heart, Share2, Bookmark, MoreHorizontal, Download, Flag,
+} from "lucide-react";
+import { useAuth } from "@/contexts/AuthContext";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
+import {
+  Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription,
 } from "@/components/ui/dialog";
+import {
+  DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { useEffect } from "react";
 
 const PhotoDetail = () => {
   const { id } = useParams<{ id: string }>();
@@ -24,10 +30,27 @@ const PhotoDetail = () => {
   const [commentText, setCommentText] = useState("");
   const [isFollowing, setIsFollowing] = useState(false);
   const [showAuthDialog, setShowAuthDialog] = useState(false);
+  const [authDialogMessage, setAuthDialogMessage] = useState("You need to be logged in. Please log in or create an account.");
+  const [liked, setLiked] = useState(false);
+  const [saved, setSaved] = useState(false);
   const [comments, setComments] = useState<{ user: string; text: string }[]>([
     { user: "pixel_hunter", text: "Incredible composition! The light is perfect." },
     { user: "analog_soul", text: "What time of day was this shot?" },
   ]);
+
+  // Check saved state
+  useEffect(() => {
+    if (!user || !id) return;
+    supabase
+      .from("saved_photos")
+      .select("id")
+      .eq("user_id", user.id)
+      .eq("photo_id", id)
+      .maybeSingle()
+      .then(({ data }) => {
+        if (data) setSaved(true);
+      });
+  }, [user, id]);
 
   if (!photo) {
     return (
@@ -43,11 +66,65 @@ const PhotoDetail = () => {
     );
   }
 
-  // Find related photos shot with similar gear (same brand keyword)
   const gearBrand = photo.gear.split(" ")[0];
   const relatedPhotos = samplePhotos.filter(
     (p) => p.id !== photo.id && p.gear.includes(gearBrand)
   );
+
+  const requireAuth = (message: string, action: () => void) => {
+    if (!user) {
+      setAuthDialogMessage(message);
+      setShowAuthDialog(true);
+      return;
+    }
+    action();
+  };
+
+  const handleLike = () => {
+    requireAuth("You need to be logged in to like photos.", () => {
+      setLiked(!liked);
+    });
+  };
+
+  const handleSave = async () => {
+    requireAuth("You need to be logged in to save photos.", async () => {
+      if (!user) return;
+      if (saved) {
+        await supabase.from("saved_photos").delete().eq("user_id", user.id).eq("photo_id", id!);
+        setSaved(false);
+        toast.success("Removed from saved");
+      } else {
+        await supabase.from("saved_photos").insert({ user_id: user.id, photo_id: id! });
+        setSaved(true);
+        toast.success("Saved to collection");
+      }
+    });
+  };
+
+  const handleShare = async () => {
+    const url = window.location.href;
+    if (navigator.share) {
+      navigator.share({ title: photo.caption || "Check out this shot", url });
+    } else {
+      await navigator.clipboard.writeText(url);
+      toast.success("Link copied to clipboard");
+    }
+  };
+
+  const handleDownload = async () => {
+    try {
+      const response = await fetch(photo.image);
+      const blob = await response.blob();
+      const link = document.createElement("a");
+      link.href = URL.createObjectURL(blob);
+      link.download = `visionx-${photo.id}.jpg`;
+      link.click();
+      URL.revokeObjectURL(link.href);
+      toast.success("Download started");
+    } catch {
+      toast.error("Failed to download");
+    }
+  };
 
   const handleComment = () => {
     if (!commentText.trim()) return;
@@ -55,20 +132,18 @@ const PhotoDetail = () => {
     setCommentText("");
   };
 
+  const getVibeLabel = (tagId: string) => {
+    const vibe = vibes.find((v) => v.id === tagId);
+    return vibe ? `${vibe.emoji} ${vibe.label}` : tagId;
+  };
+
   return (
     <div className="min-h-screen bg-background">
       <Navbar />
 
       <div className="container max-w-6xl py-8">
-        {/* Back button */}
         <button
-          onClick={() => {
-            if (window.history.length > 1) {
-              navigate(-1);
-            } else {
-              navigate("/");
-            }
-          }}
+          onClick={() => (window.history.length > 1 ? navigate(-1) : navigate("/"))}
           className="mb-6 inline-flex items-center gap-2 text-sm text-muted-foreground transition-colors hover:text-foreground"
         >
           <ArrowLeft className="h-4 w-4" />
@@ -85,7 +160,7 @@ const PhotoDetail = () => {
             />
           </div>
 
-          {/* Sidebar info */}
+          {/* Sidebar */}
           <div className="flex flex-col gap-6">
             {/* Uploader info */}
             <div className="rounded-xl border border-border bg-card p-5">
@@ -97,29 +172,18 @@ const PhotoDetail = () => {
                     </AvatarFallback>
                   </Avatar>
                   <div>
-                    <Link
-                      to={`/${photo.username}`}
-                      className="font-semibold transition-colors hover:text-foreground"
-                    >
+                    <Link to={`/${photo.username}`} className="font-semibold transition-colors hover:text-foreground">
                       @{photo.username}
                     </Link>
                     {photo.caption && (
-                      <p className="mt-0.5 text-sm italic text-muted-foreground">
-                        {photo.caption}
-                      </p>
+                      <p className="mt-0.5 text-sm italic text-muted-foreground">{photo.caption}</p>
                     )}
                   </div>
                 </div>
                 <Button
                   variant={isFollowing ? "secondary" : "default"}
                   size="sm"
-                  onClick={() => {
-                    if (!user) {
-                      setShowAuthDialog(true);
-                      return;
-                    }
-                    setIsFollowing(!isFollowing);
-                  }}
+                  onClick={() => requireAuth("You need to be logged in to follow users.", () => setIsFollowing(!isFollowing))}
                   className="gap-1.5"
                 >
                   <UserPlus className="h-3.5 w-3.5" />
@@ -127,6 +191,73 @@ const PhotoDetail = () => {
                 </Button>
               </div>
             </div>
+
+            {/* Action buttons: Like, Share, Save, More */}
+            <div className="flex items-center gap-2 rounded-xl border border-border bg-card px-5 py-3">
+              <button
+                onClick={handleLike}
+                className="flex items-center gap-1.5 rounded-lg px-3 py-2 text-sm transition-colors hover:bg-secondary"
+              >
+                <Heart className={`h-5 w-5 ${liked ? "fill-red-500 text-red-500" : "text-muted-foreground"}`} />
+                <span className={liked ? "text-red-500" : "text-muted-foreground"}>Like</span>
+              </button>
+
+              <button
+                onClick={handleShare}
+                className="flex items-center gap-1.5 rounded-lg px-3 py-2 text-sm text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
+              >
+                <Share2 className="h-5 w-5" />
+                <span>Share</span>
+              </button>
+
+              <button
+                onClick={handleSave}
+                className="flex items-center gap-1.5 rounded-lg px-3 py-2 text-sm transition-colors hover:bg-secondary"
+              >
+                <Bookmark className={`h-5 w-5 ${saved ? "fill-primary text-primary" : "text-muted-foreground"}`} />
+                <span className={saved ? "text-primary" : "text-muted-foreground"}>Save</span>
+              </button>
+
+              <div className="ml-auto">
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <button className="flex h-9 w-9 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground">
+                      <MoreHorizontal className="h-5 w-5" />
+                    </button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end">
+                    <DropdownMenuItem onClick={handleDownload} className="gap-2">
+                      <Download className="h-4 w-4" />
+                      Download
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => toast.info("Report submitted")} className="gap-2 text-destructive focus:text-destructive">
+                      <Flag className="h-4 w-4" />
+                      Report
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              </div>
+            </div>
+
+            {/* Tags */}
+            {photo.tags && photo.tags.length > 0 && (
+              <div className="rounded-xl border border-border bg-card p-5">
+                <h3 className="mb-3 text-xs font-semibold uppercase tracking-widest text-muted-foreground">
+                  Tags
+                </h3>
+                <div className="flex flex-wrap gap-2">
+                  {photo.tags.map((tag) => (
+                    <Link
+                      key={tag}
+                      to={`/vibe-matcher?vibe=${tag}`}
+                      className="inline-flex items-center rounded-full border border-border bg-secondary px-3 py-1 text-xs text-muted-foreground transition-colors hover:border-primary/50 hover:text-foreground"
+                    >
+                      {getVibeLabel(tag)}
+                    </Link>
+                  ))}
+                </div>
+              </div>
+            )}
 
             {/* Gear details */}
             <div className="rounded-xl border border-border bg-card p-5">
@@ -160,7 +291,6 @@ const PhotoDetail = () => {
               <h3 className="mb-4 text-xs font-semibold uppercase tracking-widest text-muted-foreground">
                 Comments ({comments.length})
               </h3>
-
               <div className="mb-4 max-h-64 space-y-3 overflow-y-auto pr-1">
                 {comments.map((c, i) => (
                   <div key={i} className="flex gap-2.5">
@@ -176,7 +306,6 @@ const PhotoDetail = () => {
                   </div>
                 ))}
               </div>
-
               {user ? (
                 <div className="flex gap-2">
                   <Textarea
@@ -192,18 +321,16 @@ const PhotoDetail = () => {
                       }
                     }}
                   />
-                  <Button
-                    size="icon"
-                    onClick={handleComment}
-                    disabled={!commentText.trim()}
-                    className="shrink-0"
-                  >
+                  <Button size="icon" onClick={handleComment} disabled={!commentText.trim()} className="shrink-0">
                     <Send className="h-4 w-4" />
                   </Button>
                 </div>
               ) : (
                 <button
-                  onClick={() => setShowAuthDialog(true)}
+                  onClick={() => {
+                    setAuthDialogMessage("You need to be logged in to add comments.");
+                    setShowAuthDialog(true);
+                  }}
                   className="w-full rounded-lg border border-border bg-secondary px-4 py-2.5 text-left text-sm text-muted-foreground transition-colors hover:border-primary/50 hover:text-foreground"
                 >
                   Log in to add a comment…
@@ -216,12 +343,8 @@ const PhotoDetail = () => {
         {/* Related photos */}
         {relatedPhotos.length > 0 && (
           <section className="mt-12">
-            <h2 className="mb-1 text-lg font-bold">
-              More shots with {gearBrand}
-            </h2>
-            <p className="mb-6 text-sm text-muted-foreground">
-              Other community photos taken with similar gear
-            </p>
+            <h2 className="mb-1 text-lg font-bold">More shots with {gearBrand}</h2>
+            <p className="mb-6 text-sm text-muted-foreground">Other community photos taken with similar gear</p>
             <div className="masonry-grid">
               {relatedPhotos.map((p) => (
                 <PhotoCard key={p.id} {...p} />
@@ -235,18 +358,12 @@ const PhotoDetail = () => {
       <Dialog open={showAuthDialog} onOpenChange={setShowAuthDialog}>
         <DialogContent className="sm:max-w-sm">
           <DialogHeader>
-            <DialogTitle>Sign in to comment</DialogTitle>
-            <DialogDescription>
-              You need to be logged in to add comments. Please log in or create an account.
-            </DialogDescription>
+            <DialogTitle>Sign in required</DialogTitle>
+            <DialogDescription>{authDialogMessage}</DialogDescription>
           </DialogHeader>
           <div className="flex flex-col gap-3 pt-2">
-            <Button onClick={() => navigate("/login")} className="w-full">
-              Log In
-            </Button>
-            <Button variant="outline" onClick={() => navigate("/signup")} className="w-full">
-              Sign Up
-            </Button>
+            <Button onClick={() => navigate("/login")} className="w-full">Log In</Button>
+            <Button variant="outline" onClick={() => navigate("/signup")} className="w-full">Sign Up</Button>
           </div>
         </DialogContent>
       </Dialog>

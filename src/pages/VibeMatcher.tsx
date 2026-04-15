@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useSearchParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import Navbar from "@/components/Navbar";
 import PhotoCard from "@/components/PhotoCard";
@@ -18,7 +19,11 @@ interface DbPhoto {
 }
 
 const VibeMatcher = () => {
-  const [selected, setSelected] = useState<string[]>([]);
+  const [searchParams] = useSearchParams();
+  const [selected, setSelected] = useState<string[]>(() => {
+    const vibe = searchParams.get("vibe");
+    return vibe ? [vibe] : [];
+  });
   const [dbPhotos, setDbPhotos] = useState<DbPhoto[]>([]);
   const [profiles, setProfiles] = useState<Record<string, string>>({});
 
