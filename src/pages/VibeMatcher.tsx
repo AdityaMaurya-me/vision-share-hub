@@ -20,6 +20,7 @@ interface DbPhoto {
 }
 
 const VibeMatcher = () => {
+  useScrollRestore();
   const [searchParams] = useSearchParams();
   const [selected, setSelected] = useState<string[]>(() => {
     const vibe = searchParams.get("vibe");

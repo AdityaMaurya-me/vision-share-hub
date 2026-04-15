@@ -23,6 +23,7 @@ interface UploadedPhoto {
 }
 
 const Profile = () => {
+  useScrollRestore();
   const { user } = useAuth();
   const [profile, setProfile] = useState<{ username: string; avatar_url: string | null; bio: string | null } | null>(null);
   const [editing, setEditing] = useState(false);
