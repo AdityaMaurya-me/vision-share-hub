@@ -19,7 +19,11 @@ interface DbPhoto {
 }
 
 const VibeMatcher = () => {
-  const [selected, setSelected] = useState<string[]>([]);
+  const [searchParams] = useSearchParams();
+  const [selected, setSelected] = useState<string[]>(() => {
+    const vibe = searchParams.get("vibe");
+    return vibe ? [vibe] : [];
+  });
   const [dbPhotos, setDbPhotos] = useState<DbPhoto[]>([]);
   const [profiles, setProfiles] = useState<Record<string, string>>({});
 
