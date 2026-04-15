@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import useScrollRestore from "@/hooks/useScrollRestore";
 import { useSearchParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import Navbar from "@/components/Navbar";

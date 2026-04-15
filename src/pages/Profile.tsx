@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import useScrollRestore from "@/hooks/useScrollRestore";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { Link } from "react-router-dom";
