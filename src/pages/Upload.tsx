@@ -9,6 +9,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Upload as UploadIcon, X, ImagePlus, Loader2 } from "lucide-react";
 import { toast } from "sonner";
+import { vibes } from "@/data/vibes";
 
 const Upload = () => {
   const { user } = useAuth();
@@ -22,6 +23,7 @@ const Upload = () => {
   const [aperture, setAperture] = useState("");
   const [shutterSpeed, setShutterSpeed] = useState("");
   const [iso, setIso] = useState("");
+  const [selectedTags, setSelectedTags] = useState<string[]>([]);
   const [uploading, setUploading] = useState(false);
   const [success, setSuccess] = useState<{ imageUrl: string } | null>(null);
 
@@ -38,9 +40,19 @@ const Upload = () => {
     if (fileInputRef.current) fileInputRef.current.value = "";
   };
 
+  const toggleTag = (id: string) => {
+    setSelectedTags((prev) =>
+      prev.includes(id) ? prev.filter((t) => t !== id) : [...prev, id]
+    );
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!file || !user) return;
+    if (selectedTags.length === 0) {
+      toast.error("Please select at least one photo category");
+      return;
+    }
 
     setUploading(true);
     try {
@@ -64,6 +76,7 @@ const Upload = () => {
         aperture: aperture || null,
         shutter_speed: shutterSpeed || null,
         iso: iso || null,
+        tags: selectedTags,
       });
       if (insertError) throw insertError;
 
@@ -105,6 +118,7 @@ const Upload = () => {
                   setAperture("");
                   setShutterSpeed("");
                   setIso("");
+                  setSelectedTags([]);
                 }}
               >
                 Upload another
@@ -157,6 +171,32 @@ const Upload = () => {
               className="hidden"
               onChange={handleFileSelect}
             />
+
+            {/* Category tags */}
+            <div className="space-y-2">
+              <Label>Photo Category *</Label>
+              <p className="text-xs text-muted-foreground">Select one or more categories that best describe your photo.</p>
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                {vibes.map((vibe) => {
+                  const isActive = selectedTags.includes(vibe.id);
+                  return (
+                    <button
+                      key={vibe.id}
+                      type="button"
+                      onClick={() => toggleTag(vibe.id)}
+                      className={`flex items-center gap-2 rounded-lg border px-3 py-2 text-sm transition-all ${
+                        isActive
+                          ? "border-primary bg-primary/10 text-foreground"
+                          : "border-border bg-secondary text-muted-foreground hover:border-primary/30"
+                      }`}
+                    >
+                      <span>{vibe.emoji}</span>
+                      <span className="font-medium truncate">{vibe.label}</span>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
 
             {/* Caption */}
             <div className="space-y-2">
