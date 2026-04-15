@@ -24,6 +24,7 @@ export type Database = {
           image_url: string
           iso: string | null
           shutter_speed: string | null
+          tags: string[] | null
           updated_at: string
           user_id: string
         }
@@ -36,6 +37,7 @@ export type Database = {
           image_url: string
           iso?: string | null
           shutter_speed?: string | null
+          tags?: string[] | null
           updated_at?: string
           user_id: string
         }
@@ -48,6 +50,7 @@ export type Database = {
           image_url?: string
           iso?: string | null
           shutter_speed?: string | null
+          tags?: string[] | null
           updated_at?: string
           user_id?: string
         }

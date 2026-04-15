@@ -1,26 +1,59 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import Navbar from "@/components/Navbar";
+import PhotoCard from "@/components/PhotoCard";
+import { samplePhotos } from "@/data/samplePhotos";
+import { vibes } from "@/data/vibes";
+import { supabase } from "@/integrations/supabase/client";
 
-const vibes = [
-  { id: "cinematic", emoji: "🎬", label: "Cinematic Films" },
-  { id: "lowlight", emoji: "🌙", label: "Low Light & Night" },
-  { id: "portrait", emoji: "🎭", label: "Portrait Sessions" },
-  { id: "street", emoji: "🏙️", label: "Street Photography" },
-  { id: "vlogging", emoji: "📱", label: "Vlogging & Content" },
-  { id: "film", emoji: "🎞️", label: "Film Aesthetic" },
-  { id: "sports", emoji: "⚡", label: "Sports & Action" },
-  { id: "travel", emoji: "✈️", label: "Travel Photography" },
-];
+interface DbPhoto {
+  id: string;
+  image_url: string;
+  caption: string | null;
+  gear_name: string | null;
+  aperture: string | null;
+  iso: string | null;
+  tags: string[] | null;
+  user_id: string;
+}
 
 const VibeMatcher = () => {
   const [selected, setSelected] = useState<string[]>([]);
+  const [dbPhotos, setDbPhotos] = useState<DbPhoto[]>([]);
+  const [profiles, setProfiles] = useState<Record<string, string>>({});
+
+  useEffect(() => {
+    const fetchPhotos = async () => {
+      const { data } = await supabase.from("photos").select("id, image_url, caption, gear_name, aperture, iso, tags, user_id");
+      if (data) {
+        setDbPhotos(data as DbPhoto[]);
+        const userIds = [...new Set(data.map((p: any) => p.user_id))];
+        if (userIds.length > 0) {
+          const { data: profileData } = await supabase.from("profiles").select("user_id, username").in("user_id", userIds);
+          if (profileData) {
+            const map: Record<string, string> = {};
+            profileData.forEach((p: any) => { map[p.user_id] = p.username || "user"; });
+            setProfiles(map);
+          }
+        }
+      }
+    };
+    fetchPhotos();
+  }, []);
 
   const toggle = (id: string) => {
     setSelected((prev) =>
       prev.includes(id) ? prev.filter((v) => v !== id) : [...prev, id]
     );
   };
+
+  const filteredSample = selected.length === 0
+    ? []
+    : samplePhotos.filter((p) => p.tags?.some((t) => selected.includes(t)));
+
+  const filteredDb = selected.length === 0
+    ? []
+    : dbPhotos.filter((p) => p.tags?.some((t) => selected.includes(t)));
 
   return (
     <div className="min-h-screen bg-background">
@@ -55,18 +88,56 @@ const VibeMatcher = () => {
           <Button
             disabled={selected.length === 0}
             className="gradient-bg border-0 text-primary-foreground disabled:opacity-40"
+            onClick={() => {}}
           >
             Find My Gear
           </Button>
           {selected.length > 0 && (
-            <Button
-              variant="outline"
-              onClick={() => setSelected([])}
-            >
+            <Button variant="outline" onClick={() => setSelected([])}>
               Reset All
             </Button>
           )}
         </div>
+
+        {selected.length > 0 && (filteredSample.length > 0 || filteredDb.length > 0) && (
+          <div className="mt-12">
+            <h2 className="text-2xl font-bold mb-6">
+              Matching Photos ({filteredSample.length + filteredDb.length})
+            </h2>
+            <div className="columns-2 md:columns-3 lg:columns-4 gap-4 space-y-4">
+              {filteredSample.map((p) => (
+                <PhotoCard
+                  key={p.id}
+                  id={p.id}
+                  image={p.image}
+                  caption={p.caption}
+                  username={p.username}
+                  gear={p.gear}
+                  aperture={p.aperture}
+                  iso={p.iso}
+                />
+              ))}
+              {filteredDb.map((p) => (
+                <PhotoCard
+                  key={p.id}
+                  id={p.id}
+                  image={p.image_url}
+                  caption={p.caption || ""}
+                  username={profiles[p.user_id] || "user"}
+                  gear={p.gear_name || ""}
+                  aperture={p.aperture || ""}
+                  iso={p.iso || ""}
+                />
+              ))}
+            </div>
+          </div>
+        )}
+
+        {selected.length > 0 && filteredSample.length === 0 && filteredDb.length === 0 && (
+          <p className="mt-12 text-center text-muted-foreground">
+            No photos match your selected vibes yet.
+          </p>
+        )}
       </main>
     </div>
   );
