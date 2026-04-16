@@ -1,4 +1,5 @@
 import { useState, useMemo, useEffect } from "react";
+import { useSearchParams } from "react-router-dom";
 import Navbar from "@/components/Navbar";
 import PhotoCard from "@/components/PhotoCard";
 import { samplePhotos } from "@/data/samplePhotos";
@@ -19,7 +20,8 @@ interface DbPhoto {
 }
 
 const Explore = () => {
-  const [query, setQuery] = useState("");
+  const [searchParams] = useSearchParams();
+  const [query, setQuery] = useState(searchParams.get("q") || "");
   const [dbPhotos, setDbPhotos] = useState<DbPhoto[]>([]);
 
   useEffect(() => {
