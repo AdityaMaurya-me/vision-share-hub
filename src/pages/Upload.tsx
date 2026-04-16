@@ -4,12 +4,12 @@ import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import Navbar from "@/components/Navbar";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Upload as UploadIcon, X, ImagePlus, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { vibes } from "@/data/vibes";
+import GearSelector from "@/components/GearSelector";
 
 const Upload = () => {
   const { user } = useAuth();
@@ -210,54 +210,18 @@ const Upload = () => {
               />
             </div>
 
-            {/* Gear */}
-            <div className="space-y-2">
-              <Label htmlFor="gear">Gear used</Label>
-              <Input
-                id="gear"
-                placeholder="e.g. Sony A7III + 85mm f/1.4"
-                value={gearName}
-                onChange={(e) => setGearName(e.target.value)}
-                className="bg-secondary border-border"
-              />
-            </div>
-
-            {/* Settings row */}
-            <div className="grid grid-cols-3 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="aperture">Aperture</Label>
-                <Input
-                  id="aperture"
-                  placeholder="f/2.8"
-                  value={aperture}
-                  onChange={(e) => setAperture(e.target.value)}
-                  className="bg-secondary border-border"
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="shutter">Shutter Speed</Label>
-                <Input
-                  id="shutter"
-                  placeholder="1/250"
-                  value={shutterSpeed}
-                  onChange={(e) => setShutterSpeed(e.target.value)}
-                  className="bg-secondary border-border"
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="iso">ISO</Label>
-                <Input
-                  id="iso"
-                  placeholder="100"
-                  value={iso}
-                  onChange={(e) => setIso(e.target.value)}
-                  className="bg-secondary border-border"
-                />
-              </div>
-            </div>
-            <p className="text-xs text-muted-foreground">
-              Format: Aperture as f/X.X · Shutter as 1/XXX · ISO as a number
-            </p>
+            {/* Smart Gear Selector */}
+            <GearSelector
+              onGearChange={setGearName}
+              onSettingsChange={({ aperture: a, shutterSpeed: s, iso: i }) => {
+                setAperture(a);
+                setShutterSpeed(s);
+                setIso(i);
+              }}
+              aperture={aperture}
+              shutterSpeed={shutterSpeed}
+              iso={iso}
+            />
 
             {/* Submit */}
             <Button
