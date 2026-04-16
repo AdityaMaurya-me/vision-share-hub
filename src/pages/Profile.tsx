@@ -11,6 +11,16 @@ import { Share2, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import PhotoCard from "@/components/PhotoCard";
 import { samplePhotos } from "@/data/samplePhotos";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 interface UploadedPhoto {
   id: string;
@@ -65,15 +75,18 @@ const Profile = () => {
     toast.success("Profile link copied!");
   };
 
-  const handleDeleteUpload = async (photoId: string) => {
-    if (!confirm("Delete this photo?")) return;
-    const { error } = await supabase.from("photos").delete().eq("id", photoId);
+  const [deleteTarget, setDeleteTarget] = useState<string | null>(null);
+
+  const handleDeleteUpload = async () => {
+    if (!deleteTarget) return;
+    const { error } = await supabase.from("photos").delete().eq("id", deleteTarget);
     if (error) {
       toast.error("Failed to delete");
     } else {
-      setUploads((prev) => prev.filter((p) => p.id !== photoId));
+      setUploads((prev) => prev.filter((p) => p.id !== deleteTarget));
       toast.success("Photo deleted");
     }
+    setDeleteTarget(null);
   };
 
   const username = profile?.username || user?.email || "User";
@@ -150,7 +163,7 @@ const Profile = () => {
                       </div>
                     </div>
                     <button
-                      onClick={() => handleDeleteUpload(photo.id)}
+                      onClick={() => setDeleteTarget(photo.id)}
                       className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity bg-destructive text-destructive-foreground rounded-full p-1.5"
                     >
                       <Trash2 className="h-3.5 w-3.5" />
@@ -191,6 +204,26 @@ const Profile = () => {
           </TabsContent>
         </Tabs>
       </main>
+
+      <AlertDialog open={!!deleteTarget} onOpenChange={(open) => !open && setDeleteTarget(null)}>
+        <AlertDialogContent className="bg-background border-border">
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete this photo?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This will permanently remove this photo from your profile and the entire site. This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleDeleteUpload}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };
