@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import useScrollRestore from "@/hooks/useScrollRestore";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import Navbar from "@/components/Navbar";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -26,8 +26,7 @@ const Profile = () => {
   useScrollRestore();
   const { user } = useAuth();
   const [profile, setProfile] = useState<{ username: string; avatar_url: string | null; bio: string | null } | null>(null);
-  const [editing, setEditing] = useState(false);
-  const [savedPhotoIds, setSavedPhotoIds] = useState<string[]>([]);
+  const [profile, setProfile] = useState<{ username: string; avatar_url: string | null; bio: string | null } | null>(null);
   const [uploads, setUploads] = useState<UploadedPhoto[]>([]);
 
   useEffect(() => {
@@ -110,9 +109,9 @@ const Profile = () => {
             <Button
               size="sm"
               className="mt-2 gradient-bg border-0 text-primary-foreground"
-              onClick={() => setEditing(!editing)}
+              asChild
             >
-              Edit Profile
+              <Link to="/edit-profile">Edit Profile</Link>
             </Button>
             <button
               onClick={handleShare}
