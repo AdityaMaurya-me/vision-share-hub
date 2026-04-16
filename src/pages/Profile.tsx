@@ -163,7 +163,7 @@ const Profile = () => {
                       </div>
                     </div>
                     <button
-                      onClick={() => handleDeleteUpload(photo.id)}
+                      onClick={() => setDeleteTarget(photo.id)}
                       className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity bg-destructive text-destructive-foreground rounded-full p-1.5"
                     >
                       <Trash2 className="h-3.5 w-3.5" />
