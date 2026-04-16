@@ -240,13 +240,21 @@ const PhotoDetail = () => {
             </div>
 
             {/* Tags */}
-            {photo.tags && photo.tags.length > 0 && (
+            {((photo.tags && photo.tags.length > 0) || photo.gear) && (
               <div className="rounded-xl border border-border bg-card p-5">
                 <h3 className="mb-3 text-xs font-semibold uppercase tracking-widest text-muted-foreground">
                   Tags
                 </h3>
                 <div className="flex flex-wrap gap-2">
-                  {photo.tags.map((tag) => (
+                  {photo.gear && (
+                    <Link
+                      to={`/explore?q=${encodeURIComponent(photo.gear)}`}
+                      className="inline-flex items-center gap-1 rounded-full border border-border bg-secondary px-3 py-1 text-xs text-muted-foreground transition-colors hover:border-primary/50 hover:text-foreground"
+                    >
+                      <Camera className="h-3 w-3" /> {photo.gear}
+                    </Link>
+                  )}
+                  {photo.tags?.map((tag) => (
                     <Link
                       key={tag}
                       to={`/vibe-matcher?vibe=${tag}`}
