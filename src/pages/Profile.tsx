@@ -75,15 +75,18 @@ const Profile = () => {
     toast.success("Profile link copied!");
   };
 
-  const handleDeleteUpload = async (photoId: string) => {
-    if (!confirm("Delete this photo?")) return;
-    const { error } = await supabase.from("photos").delete().eq("id", photoId);
+  const [deleteTarget, setDeleteTarget] = useState<string | null>(null);
+
+  const handleDeleteUpload = async () => {
+    if (!deleteTarget) return;
+    const { error } = await supabase.from("photos").delete().eq("id", deleteTarget);
     if (error) {
       toast.error("Failed to delete");
     } else {
-      setUploads((prev) => prev.filter((p) => p.id !== photoId));
+      setUploads((prev) => prev.filter((p) => p.id !== deleteTarget));
       toast.success("Photo deleted");
     }
+    setDeleteTarget(null);
   };
 
   const username = profile?.username || user?.email || "User";
