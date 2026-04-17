@@ -9,6 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { ArrowLeft, Camera } from "lucide-react";
+import BackButton from "@/components/BackButton";
 
 const EditProfile = () => {
   const { user } = useAuth();
@@ -86,12 +87,7 @@ const EditProfile = () => {
     <div className="min-h-screen bg-background">
       <Navbar />
       <main className="container max-w-lg pt-24 pb-16">
-        <button
-          onClick={() => navigate(-1)}
-          className="mb-6 inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground"
-        >
-          <ArrowLeft className="h-4 w-4" /> Back
-        </button>
+        <BackButton />
 
         <h1 className="mb-8 text-2xl font-bold">Edit Profile</h1>
 
