@@ -3,6 +3,7 @@ import useScrollRestore from "@/hooks/useScrollRestore";
 import { useSearchParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import Navbar from "@/components/Navbar";
+import BackButton from "@/components/BackButton";
 import PhotoCard from "@/components/PhotoCard";
 import { samplePhotos } from "@/data/samplePhotos";
 import { vibes } from "@/data/vibes";
@@ -22,10 +23,10 @@ interface DbPhoto {
 const VibeMatcher = () => {
   useScrollRestore();
   const [searchParams] = useSearchParams();
-  const [selected, setSelected] = useState<string[]>(() => {
-    const vibe = searchParams.get("vibe");
-    return vibe ? [vibe] : [];
-  });
+  const initialVibe = searchParams.get("vibe");
+  const [selected, setSelected] = useState<string[]>(initialVibe ? [initialVibe] : []);
+  // Vibes user has actually committed via "Find My Gear"
+  const [appliedVibes, setAppliedVibes] = useState<string[]>(initialVibe ? [initialVibe] : []);
   const [dbPhotos, setDbPhotos] = useState<DbPhoto[]>([]);
   const [profiles, setProfiles] = useState<Record<string, string>>({});
 
@@ -54,18 +55,19 @@ const VibeMatcher = () => {
     );
   };
 
-  const filteredSample = selected.length === 0
+  const filteredSample = appliedVibes.length === 0
     ? []
-    : samplePhotos.filter((p) => p.tags?.some((t) => selected.includes(t)));
+    : samplePhotos.filter((p) => p.tags?.some((t) => appliedVibes.includes(t)));
 
-  const filteredDb = selected.length === 0
+  const filteredDb = appliedVibes.length === 0
     ? []
-    : dbPhotos.filter((p) => p.tags?.some((t) => selected.includes(t)));
+    : dbPhotos.filter((p) => p.tags?.some((t) => appliedVibes.includes(t)));
 
   return (
     <div className="min-h-screen bg-background">
       <Navbar />
       <main className="container pt-24 pb-16">
+        <BackButton />
         <h1 className="text-3xl font-bold">Vibe Matcher</h1>
         <p className="mt-2 text-muted-foreground">
           Select your creative goals and we'll find the best gear for you.
@@ -95,18 +97,18 @@ const VibeMatcher = () => {
           <Button
             disabled={selected.length === 0}
             className="gradient-bg border-0 text-primary-foreground disabled:opacity-40"
-            onClick={() => {}}
+            onClick={() => setAppliedVibes(selected)}
           >
             Find My Gear
           </Button>
-          {selected.length > 0 && (
-            <Button variant="outline" onClick={() => setSelected([])}>
+          {(selected.length > 0 || appliedVibes.length > 0) && (
+            <Button variant="outline" onClick={() => { setSelected([]); setAppliedVibes([]); }}>
               Reset All
             </Button>
           )}
         </div>
 
-        {selected.length > 0 && (filteredSample.length > 0 || filteredDb.length > 0) && (
+        {appliedVibes.length > 0 && (filteredSample.length > 0 || filteredDb.length > 0) && (
           <div className="mt-12">
             <h2 className="text-2xl font-bold mb-6">
               Matching Photos ({filteredSample.length + filteredDb.length})
@@ -140,9 +142,14 @@ const VibeMatcher = () => {
           </div>
         )}
 
-        {selected.length > 0 && filteredSample.length === 0 && filteredDb.length === 0 && (
+        {appliedVibes.length > 0 && filteredSample.length === 0 && filteredDb.length === 0 && (
           <p className="mt-12 text-center text-muted-foreground">
             No photos match your selected vibes yet.
+          </p>
+        )}
+        {selected.length === 0 && appliedVibes.length === 0 && (
+          <p className="mt-12 text-center text-sm text-muted-foreground">
+            Pick one or more vibes above, then hit <span className="text-foreground">Find My Gear</span>.
           </p>
         )}
       </main>
