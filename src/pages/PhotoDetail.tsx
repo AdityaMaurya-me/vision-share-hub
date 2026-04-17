@@ -9,8 +9,9 @@ import { Textarea } from "@/components/ui/textarea";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import {
   ArrowLeft, UserPlus, Send, Camera, Aperture, Gauge,
-  Heart, Share2, Bookmark, MoreHorizontal, Download, Flag,
+  Heart, Share2, Bookmark, MoreHorizontal, Download, Flag, Trash2, Aperture as LensIcon,
 } from "lucide-react";
+import BackButton from "@/components/BackButton";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -33,9 +34,9 @@ const PhotoDetail = () => {
   const [authDialogMessage, setAuthDialogMessage] = useState("You need to be logged in. Please log in or create an account.");
   const [liked, setLiked] = useState(false);
   const [saved, setSaved] = useState(false);
-  const [comments, setComments] = useState<{ user: string; text: string }[]>([
-    { user: "pixel_hunter", text: "Incredible composition! The light is perfect." },
-    { user: "analog_soul", text: "What time of day was this shot?" },
+  const [comments, setComments] = useState<{ id: string; user: string; text: string; isMine?: boolean; likes: number; likedByMe: boolean }[]>([
+    { id: "c1", user: "pixel_hunter", text: "Incredible composition! The light is perfect.", likes: 3, likedByMe: false },
+    { id: "c2", user: "analog_soul", text: "What time of day was this shot?", likes: 1, likedByMe: false },
   ]);
 
   // Check saved state
@@ -128,8 +129,28 @@ const PhotoDetail = () => {
 
   const handleComment = () => {
     if (!commentText.trim()) return;
-    setComments((prev) => [...prev, { user: "you", text: commentText.trim() }]);
+    setComments((prev) => [
+      ...prev,
+      { id: `c-${Date.now()}`, user: "you", text: commentText.trim(), isMine: true, likes: 0, likedByMe: false },
+    ]);
     setCommentText("");
+  };
+
+  const toggleCommentLike = (commentId: string) => {
+    requireAuth("You need to be logged in to like comments.", () => {
+      setComments((prev) =>
+        prev.map((c) =>
+          c.id === commentId
+            ? { ...c, likedByMe: !c.likedByMe, likes: c.likes + (c.likedByMe ? -1 : 1) }
+            : c
+        )
+      );
+    });
+  };
+
+  const deleteComment = (commentId: string) => {
+    setComments((prev) => prev.filter((c) => c.id !== commentId));
+    toast.success("Comment deleted");
   };
 
   const getVibeLabel = (tagId: string) => {
@@ -142,13 +163,7 @@ const PhotoDetail = () => {
       <Navbar />
 
       <div className="container max-w-6xl pt-24 pb-8">
-        <button
-          onClick={() => navigate(-1)}
-          className="mb-6 inline-flex items-center gap-2 text-sm text-muted-foreground transition-colors hover:text-foreground"
-        >
-          <ArrowLeft className="h-4 w-4" />
-          Back
-        </button>
+        <BackButton />
 
         <div className="grid gap-8 lg:grid-cols-[1fr_380px]">
           {/* Main image */}
@@ -240,32 +255,46 @@ const PhotoDetail = () => {
             </div>
 
             {/* Tags */}
-            {((photo.tags && photo.tags.length > 0) || photo.gear) && (
-              <div className="rounded-xl border border-border bg-card p-5">
-                <h3 className="mb-3 text-xs font-semibold uppercase tracking-widest text-muted-foreground">
-                  Tags
-                </h3>
-                <div className="flex flex-wrap gap-2">
-                  {photo.gear && (
-                    <Link
-                      to={`/explore?q=${encodeURIComponent(photo.gear)}`}
-                      className="inline-flex items-center gap-1 rounded-full border border-border bg-secondary px-3 py-1 text-xs text-muted-foreground transition-colors hover:border-primary/50 hover:text-foreground"
-                    >
-                      <Camera className="h-3 w-3" /> {photo.gear}
-                    </Link>
-                  )}
-                  {photo.tags?.map((tag) => (
-                    <Link
-                      key={tag}
-                      to={`/vibe-matcher?vibe=${tag}`}
-                      className="inline-flex items-center rounded-full border border-border bg-secondary px-3 py-1 text-xs text-muted-foreground transition-colors hover:border-primary/50 hover:text-foreground"
-                    >
-                      {getVibeLabel(tag)}
-                    </Link>
-                  ))}
+            {((photo.tags && photo.tags.length > 0) || photo.gear) && (() => {
+              const gearStr = photo.gear || "";
+              const [bodyPart, lensPart] = gearStr.split(" + ").map((s) => s.trim());
+              const brand = bodyPart ? bodyPart.split(" ")[0] : "";
+              const lens = lensPart || "";
+              return (
+                <div className="rounded-xl border border-border bg-card p-5">
+                  <h3 className="mb-3 text-xs font-semibold uppercase tracking-widest text-muted-foreground">
+                    Tags
+                  </h3>
+                  <div className="flex flex-wrap gap-2">
+                    {brand && (
+                      <Link
+                        to={`/explore?q=${encodeURIComponent(brand)}`}
+                        className="inline-flex items-center gap-1 rounded-full border border-border bg-secondary px-3 py-1 text-xs text-muted-foreground transition-colors hover:border-primary/50 hover:text-foreground"
+                      >
+                        <Camera className="h-3 w-3" /> {brand}
+                      </Link>
+                    )}
+                    {lens && (
+                      <Link
+                        to={`/explore?q=${encodeURIComponent(lens)}`}
+                        className="inline-flex items-center gap-1 rounded-full border border-border bg-secondary px-3 py-1 text-xs text-muted-foreground transition-colors hover:border-primary/50 hover:text-foreground"
+                      >
+                        <LensIcon className="h-3 w-3" /> {lens}
+                      </Link>
+                    )}
+                    {photo.tags?.map((tag) => (
+                      <Link
+                        key={tag}
+                        to={`/vibe-matcher?vibe=${tag}`}
+                        className="inline-flex items-center rounded-full border border-border bg-secondary px-3 py-1 text-xs text-muted-foreground transition-colors hover:border-primary/50 hover:text-foreground"
+                      >
+                        {getVibeLabel(tag)}
+                      </Link>
+                    ))}
+                  </div>
                 </div>
-              </div>
-            )}
+              );
+            })()}
 
             {/* Gear details */}
             <div className="rounded-xl border border-border bg-card p-5">
@@ -300,16 +329,34 @@ const PhotoDetail = () => {
                 Comments ({comments.length})
               </h3>
               <div className="mb-4 max-h-64 space-y-3 overflow-y-auto pr-1">
-                {comments.map((c, i) => (
-                  <div key={i} className="flex gap-2.5">
+                {comments.map((c) => (
+                  <div key={c.id} className="group flex gap-2.5">
                     <Avatar className="h-7 w-7 shrink-0">
                       <AvatarFallback className="bg-secondary text-[10px] font-medium text-muted-foreground">
                         {c.user.slice(0, 2).toUpperCase()}
                       </AvatarFallback>
                     </Avatar>
-                    <div>
+                    <div className="min-w-0 flex-1">
                       <span className="text-xs font-medium">@{c.user}</span>
                       <p className="text-sm text-muted-foreground">{c.text}</p>
+                      <div className="mt-1 flex items-center gap-3">
+                        <button
+                          onClick={() => toggleCommentLike(c.id)}
+                          className="inline-flex items-center gap-1 text-xs text-muted-foreground transition-colors hover:text-foreground"
+                        >
+                          <Heart className={`h-3.5 w-3.5 ${c.likedByMe ? "fill-red-500 text-red-500" : ""}`} />
+                          {c.likes > 0 && <span>{c.likes}</span>}
+                        </button>
+                        {c.isMine && (
+                          <button
+                            onClick={() => deleteComment(c.id)}
+                            className="inline-flex items-center gap-1 text-xs text-muted-foreground opacity-0 transition-all hover:text-destructive group-hover:opacity-100"
+                          >
+                            <Trash2 className="h-3.5 w-3.5" />
+                            Delete
+                          </button>
+                        )}
+                      </div>
                     </div>
                   </div>
                 ))}

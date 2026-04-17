@@ -10,6 +10,7 @@ import { Upload as UploadIcon, X, ImagePlus, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { vibes } from "@/data/vibes";
 import GearSelector from "@/components/GearSelector";
+import BackButton from "@/components/BackButton";
 
 const Upload = () => {
   const { user } = useAuth();
@@ -135,6 +136,7 @@ const Upload = () => {
       <Navbar />
       <main className="container pt-24 pb-16">
         <div className="max-w-xl mx-auto">
+          <BackButton />
           <h1 className="text-3xl font-bold mb-2">Share a Shot</h1>
           <p className="text-muted-foreground mb-8">
             Upload your best work and let the community see what your gear can do.
