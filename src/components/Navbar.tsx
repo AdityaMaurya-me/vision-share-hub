@@ -2,11 +2,12 @@ import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useAuth } from "@/contexts/AuthContext";
-import { ChevronDown } from "lucide-react";
+import { ChevronDown, Settings, HelpCircle, LogOut } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { toast } from "sonner";
@@ -14,9 +15,9 @@ import { toast } from "sonner";
 const Navbar = () => {
   const { user, signOut } = useAuth();
 
-  const handleSignOut = async () => {
+  const handleLogout = async () => {
     await signOut();
-    toast.success("Signed out");
+    toast.success("Logged out");
   };
 
   return (
@@ -57,12 +58,23 @@ const Navbar = () => {
                   <ChevronDown className="h-4 w-4 text-muted-foreground" />
                 </button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-40">
+              <DropdownMenuContent align="end" className="w-44">
                 <DropdownMenuItem asChild>
-                  <Link to="/profile">My Profile</Link>
+                  <Link to="/settings" className="gap-2">
+                    <Settings className="h-4 w-4" />
+                    Settings
+                  </Link>
                 </DropdownMenuItem>
-                <DropdownMenuItem onClick={handleSignOut}>
-                  Sign Out
+                <DropdownMenuItem asChild>
+                  <Link to="/help" className="gap-2">
+                    <HelpCircle className="h-4 w-4" />
+                    Help
+                  </Link>
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={handleLogout} className="gap-2">
+                  <LogOut className="h-4 w-4" />
+                  Logout
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>

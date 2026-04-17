@@ -2,15 +2,16 @@ import { useState, useEffect } from "react";
 import useScrollRestore from "@/hooks/useScrollRestore";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
-import { Link, useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 import Navbar from "@/components/Navbar";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Share2, Trash2 } from "lucide-react";
+import { Share2, Trash2, FolderPlus, Folder, Plus, X } from "lucide-react";
 import { toast } from "sonner";
 import PhotoCard from "@/components/PhotoCard";
 import { samplePhotos } from "@/data/samplePhotos";
+import { Input } from "@/components/ui/input";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -21,6 +22,11 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+
+interface Collection {
+  id: string;
+  name: string;
+}
 
 interface UploadedPhoto {
   id: string;
@@ -38,6 +44,13 @@ const Profile = () => {
   const [profile, setProfile] = useState<{ username: string; avatar_url: string | null; bio: string | null } | null>(null);
   const [savedPhotoIds, setSavedPhotoIds] = useState<string[]>([]);
   const [uploads, setUploads] = useState<UploadedPhoto[]>([]);
+  const [collections, setCollections] = useState<Collection[]>([]);
+  const [collectionCounts, setCollectionCounts] = useState<Record<string, number>>({});
+  const [activeCollection, setActiveCollection] = useState<string | null>(null);
+  const [collectionPhotoIds, setCollectionPhotoIds] = useState<string[]>([]);
+  const [creatingCollection, setCreatingCollection] = useState(false);
+  const [newCollectionName, setNewCollectionName] = useState("");
+  const [collectionToDelete, setCollectionToDelete] = useState<Collection | null>(null);
 
   useEffect(() => {
     if (!user) return;
@@ -66,9 +79,73 @@ const Profile = () => {
       .then(({ data }) => {
         if (data) setUploads(data);
       });
+
+    (async () => {
+      const { data: cols } = await supabase
+        .from("collections")
+        .select("id, name")
+        .eq("user_id", user.id)
+        .order("created_at", { ascending: false });
+      if (cols) {
+        setCollections(cols);
+        const { data: cps } = await supabase
+          .from("collection_photos")
+          .select("collection_id")
+          .eq("user_id", user.id);
+        const counts: Record<string, number> = {};
+        cps?.forEach((c) => {
+          counts[c.collection_id] = (counts[c.collection_id] || 0) + 1;
+        });
+        setCollectionCounts(counts);
+      }
+    })();
   }, [user]);
 
-  const savedPhotos = samplePhotos.filter((p) => savedPhotoIds.includes(p.id));
+  useEffect(() => {
+    if (!activeCollection || !user) {
+      setCollectionPhotoIds([]);
+      return;
+    }
+    supabase
+      .from("collection_photos")
+      .select("photo_id")
+      .eq("collection_id", activeCollection)
+      .then(({ data }) => {
+        if (data) setCollectionPhotoIds(data.map((d) => d.photo_id));
+      });
+  }, [activeCollection, user]);
+
+  const handleCreateCollection = async () => {
+    if (!user || !newCollectionName.trim()) return;
+    const { data, error } = await supabase
+      .from("collections")
+      .insert({ user_id: user.id, name: newCollectionName.trim() })
+      .select("id, name")
+      .single();
+    if (error || !data) {
+      toast.error("Could not create collection");
+      return;
+    }
+    setCollections((prev) => [data, ...prev]);
+    setNewCollectionName("");
+    setCreatingCollection(false);
+    toast.success(`Created "${data.name}"`);
+  };
+
+  const handleDeleteCollection = async () => {
+    if (!collectionToDelete) return;
+    const { error } = await supabase.from("collections").delete().eq("id", collectionToDelete.id);
+    if (error) {
+      toast.error("Could not delete");
+    } else {
+      setCollections((prev) => prev.filter((c) => c.id !== collectionToDelete.id));
+      if (activeCollection === collectionToDelete.id) setActiveCollection(null);
+      toast.success("Collection deleted");
+    }
+    setCollectionToDelete(null);
+  };
+
+
 
   const handleShare = () => {
     navigator.clipboard.writeText(window.location.href);
@@ -180,18 +257,106 @@ const Profile = () => {
           </TabsContent>
 
           <TabsContent value="saved">
-            {savedPhotos.length > 0 ? (
-              <div className="masonry-grid">
-                {savedPhotos.map((photo) => (
-                  <PhotoCard key={photo.id} {...photo} />
-                ))}
+            {/* Collections section */}
+            <div className="mb-8">
+              <div className="mb-3 flex items-center justify-between">
+                <h2 className="text-sm font-semibold uppercase tracking-widest text-muted-foreground">Collections</h2>
+                {!creatingCollection && (
+                  <Button size="sm" variant="outline" onClick={() => setCreatingCollection(true)} className="gap-1.5">
+                    <Plus className="h-3.5 w-3.5" /> New
+                  </Button>
+                )}
               </div>
-            ) : (
-              <div className="flex flex-col items-center justify-center py-16 text-muted-foreground">
-                <p className="text-lg font-medium">No saved photos</p>
-                <p className="text-sm">Bookmark photos from the gallery to see them here!</p>
-              </div>
-            )}
+
+              {creatingCollection && (
+                <div className="mb-4 flex gap-2">
+                  <Input
+                    autoFocus
+                    value={newCollectionName}
+                    onChange={(e) => setNewCollectionName(e.target.value)}
+                    placeholder="Collection name (e.g. Sunsets)"
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") handleCreateCollection();
+                      if (e.key === "Escape") { setCreatingCollection(false); setNewCollectionName(""); }
+                    }}
+                  />
+                  <Button onClick={handleCreateCollection} disabled={!newCollectionName.trim()}>Create</Button>
+                  <Button variant="ghost" onClick={() => { setCreatingCollection(false); setNewCollectionName(""); }}>Cancel</Button>
+                </div>
+              )}
+
+              {collections.length > 0 ? (
+                <div className="flex flex-wrap gap-2">
+                  <button
+                    onClick={() => setActiveCollection(null)}
+                    className={`inline-flex items-center gap-2 rounded-full border px-4 py-2 text-sm transition-colors ${
+                      activeCollection === null
+                        ? "border-primary bg-primary/10 text-foreground"
+                        : "border-border bg-secondary text-muted-foreground hover:border-surface-hover"
+                    }`}
+                  >
+                    <FolderPlus className="h-4 w-4" />
+                    All Saved ({savedPhotoIds.length})
+                  </button>
+                  {collections.map((c) => (
+                    <div
+                      key={c.id}
+                      className={`group inline-flex items-center gap-1 rounded-full border py-1 pl-3 pr-1 text-sm transition-colors ${
+                        activeCollection === c.id
+                          ? "border-primary bg-primary/10 text-foreground"
+                          : "border-border bg-secondary text-muted-foreground hover:border-surface-hover"
+                      }`}
+                    >
+                      <button
+                        onClick={() => setActiveCollection(c.id)}
+                        className="inline-flex items-center gap-1.5"
+                      >
+                        <Folder className="h-4 w-4" />
+                        {c.name} ({collectionCounts[c.id] || 0})
+                      </button>
+                      <button
+                        onClick={() => setCollectionToDelete(c)}
+                        className="ml-1 flex h-5 w-5 items-center justify-center rounded-full opacity-0 transition-opacity group-hover:opacity-100 hover:bg-background hover:text-destructive"
+                        aria-label={`Delete ${c.name}`}
+                      >
+                        <X className="h-3 w-3" />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-sm text-muted-foreground">
+                  No collections yet. Create one to organize your saved photos.
+                </p>
+              )}
+            </div>
+
+            {/* Photos in active selection */}
+            {(() => {
+              const idsToShow = activeCollection ? collectionPhotoIds : savedPhotoIds;
+              const photosToShow = samplePhotos.filter((p) => idsToShow.includes(p.id));
+              if (photosToShow.length === 0) {
+                return (
+                  <div className="flex flex-col items-center justify-center py-16 text-muted-foreground">
+                    <p className="text-lg font-medium">
+                      {activeCollection ? "This collection is empty" : "No saved photos"}
+                    </p>
+                    <p className="text-sm">
+                      {activeCollection
+                        ? "Use the three-dot menu on any photo to add it here."
+                        : "Bookmark photos from the gallery to see them here!"}
+                    </p>
+                  </div>
+                );
+              }
+              return (
+                <div className="masonry-grid">
+                  {photosToShow.map((photo) => (
+                    <PhotoCard key={photo.id} {...photo} />
+                  ))}
+                </div>
+              );
+            })()}
           </TabsContent>
 
           <TabsContent value="kit">
@@ -217,6 +382,26 @@ const Profile = () => {
             <AlertDialogCancel>Cancel</AlertDialogCancel>
             <AlertDialogAction
               onClick={handleDeleteUpload}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      <AlertDialog open={!!collectionToDelete} onOpenChange={(open) => !open && setCollectionToDelete(null)}>
+        <AlertDialogContent className="bg-background border-border">
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete "{collectionToDelete?.name}"?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This removes the collection and clears its grouping. The saved photos themselves remain in your saved list.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleDeleteCollection}
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
             >
               Delete

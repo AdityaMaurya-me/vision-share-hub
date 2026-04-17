@@ -9,6 +9,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Search, X, Clock } from "lucide-react";
+import usePersistentState from "@/hooks/usePersistentState";
 
 interface DbPhoto {
   id: string;
@@ -36,11 +37,14 @@ const loadHistory = (): string[] => {
 const Explore = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const initialQuery = searchParams.get("q") || "";
-  const [inputValue, setInputValue] = useState(initialQuery);
-  const [activeQuery, setActiveQuery] = useState(initialQuery);
+  const [inputValue, setInputValue] = usePersistentState<string>("explore_input", initialQuery);
+  const [activeQuery, setActiveQuery] = usePersistentState<string>("explore_active", initialQuery);
   const [history, setHistory] = useState<string[]>(loadHistory);
   const [dbPhotos, setDbPhotos] = useState<DbPhoto[]>([]);
-  const [hasSearched, setHasSearched] = useState(initialQuery.length > 0);
+  const [hasSearched, setHasSearched] = usePersistentState<boolean>(
+    "explore_has_searched",
+    initialQuery.length > 0
+  );
 
   useEffect(() => {
     supabase
