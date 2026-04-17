@@ -44,6 +44,13 @@ const Profile = () => {
   const [profile, setProfile] = useState<{ username: string; avatar_url: string | null; bio: string | null } | null>(null);
   const [savedPhotoIds, setSavedPhotoIds] = useState<string[]>([]);
   const [uploads, setUploads] = useState<UploadedPhoto[]>([]);
+  const [collections, setCollections] = useState<Collection[]>([]);
+  const [collectionCounts, setCollectionCounts] = useState<Record<string, number>>({});
+  const [activeCollection, setActiveCollection] = useState<string | null>(null);
+  const [collectionPhotoIds, setCollectionPhotoIds] = useState<string[]>([]);
+  const [creatingCollection, setCreatingCollection] = useState(false);
+  const [newCollectionName, setNewCollectionName] = useState("");
+  const [collectionToDelete, setCollectionToDelete] = useState<Collection | null>(null);
 
   useEffect(() => {
     if (!user) return;
@@ -72,7 +79,71 @@ const Profile = () => {
       .then(({ data }) => {
         if (data) setUploads(data);
       });
+
+    (async () => {
+      const { data: cols } = await supabase
+        .from("collections")
+        .select("id, name")
+        .eq("user_id", user.id)
+        .order("created_at", { ascending: false });
+      if (cols) {
+        setCollections(cols);
+        const { data: cps } = await supabase
+          .from("collection_photos")
+          .select("collection_id")
+          .eq("user_id", user.id);
+        const counts: Record<string, number> = {};
+        cps?.forEach((c) => {
+          counts[c.collection_id] = (counts[c.collection_id] || 0) + 1;
+        });
+        setCollectionCounts(counts);
+      }
+    })();
   }, [user]);
+
+  useEffect(() => {
+    if (!activeCollection || !user) {
+      setCollectionPhotoIds([]);
+      return;
+    }
+    supabase
+      .from("collection_photos")
+      .select("photo_id")
+      .eq("collection_id", activeCollection)
+      .then(({ data }) => {
+        if (data) setCollectionPhotoIds(data.map((d) => d.photo_id));
+      });
+  }, [activeCollection, user]);
+
+  const handleCreateCollection = async () => {
+    if (!user || !newCollectionName.trim()) return;
+    const { data, error } = await supabase
+      .from("collections")
+      .insert({ user_id: user.id, name: newCollectionName.trim() })
+      .select("id, name")
+      .single();
+    if (error || !data) {
+      toast.error("Could not create collection");
+      return;
+    }
+    setCollections((prev) => [data, ...prev]);
+    setNewCollectionName("");
+    setCreatingCollection(false);
+    toast.success(`Created "${data.name}"`);
+  };
+
+  const handleDeleteCollection = async () => {
+    if (!collectionToDelete) return;
+    const { error } = await supabase.from("collections").delete().eq("id", collectionToDelete.id);
+    if (error) {
+      toast.error("Could not delete");
+    } else {
+      setCollections((prev) => prev.filter((c) => c.id !== collectionToDelete.id));
+      if (activeCollection === collectionToDelete.id) setActiveCollection(null);
+      toast.success("Collection deleted");
+    }
+    setCollectionToDelete(null);
+  };
 
   const savedPhotos = samplePhotos.filter((p) => savedPhotoIds.includes(p.id));
 
