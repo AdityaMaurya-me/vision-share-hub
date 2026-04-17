@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import useScrollRestore from "@/hooks/useScrollRestore";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
-import { Link, useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 import Navbar from "@/components/Navbar";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -145,7 +145,7 @@ const Profile = () => {
     setCollectionToDelete(null);
   };
 
-  const savedPhotos = samplePhotos.filter((p) => savedPhotoIds.includes(p.id));
+
 
   const handleShare = () => {
     navigator.clipboard.writeText(window.location.href);
