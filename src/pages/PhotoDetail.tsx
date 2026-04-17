@@ -9,8 +9,9 @@ import { Textarea } from "@/components/ui/textarea";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import {
   ArrowLeft, UserPlus, Send, Camera, Aperture, Gauge,
-  Heart, Share2, Bookmark, MoreHorizontal, Download, Flag,
+  Heart, Share2, Bookmark, MoreHorizontal, Download, Flag, Trash2, Aperture as LensIcon,
 } from "lucide-react";
+import BackButton from "@/components/BackButton";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -33,9 +34,9 @@ const PhotoDetail = () => {
   const [authDialogMessage, setAuthDialogMessage] = useState("You need to be logged in. Please log in or create an account.");
   const [liked, setLiked] = useState(false);
   const [saved, setSaved] = useState(false);
-  const [comments, setComments] = useState<{ user: string; text: string }[]>([
-    { user: "pixel_hunter", text: "Incredible composition! The light is perfect." },
-    { user: "analog_soul", text: "What time of day was this shot?" },
+  const [comments, setComments] = useState<{ id: string; user: string; text: string; isMine?: boolean; likes: number; likedByMe: boolean }[]>([
+    { id: "c1", user: "pixel_hunter", text: "Incredible composition! The light is perfect.", likes: 3, likedByMe: false },
+    { id: "c2", user: "analog_soul", text: "What time of day was this shot?", likes: 1, likedByMe: false },
   ]);
 
   // Check saved state
@@ -128,8 +129,28 @@ const PhotoDetail = () => {
 
   const handleComment = () => {
     if (!commentText.trim()) return;
-    setComments((prev) => [...prev, { user: "you", text: commentText.trim() }]);
+    setComments((prev) => [
+      ...prev,
+      { id: `c-${Date.now()}`, user: "you", text: commentText.trim(), isMine: true, likes: 0, likedByMe: false },
+    ]);
     setCommentText("");
+  };
+
+  const toggleCommentLike = (commentId: string) => {
+    requireAuth("You need to be logged in to like comments.", () => {
+      setComments((prev) =>
+        prev.map((c) =>
+          c.id === commentId
+            ? { ...c, likedByMe: !c.likedByMe, likes: c.likes + (c.likedByMe ? -1 : 1) }
+            : c
+        )
+      );
+    });
+  };
+
+  const deleteComment = (commentId: string) => {
+    setComments((prev) => prev.filter((c) => c.id !== commentId));
+    toast.success("Comment deleted");
   };
 
   const getVibeLabel = (tagId: string) => {
@@ -142,13 +163,7 @@ const PhotoDetail = () => {
       <Navbar />
 
       <div className="container max-w-6xl pt-24 pb-8">
-        <button
-          onClick={() => navigate(-1)}
-          className="mb-6 inline-flex items-center gap-2 text-sm text-muted-foreground transition-colors hover:text-foreground"
-        >
-          <ArrowLeft className="h-4 w-4" />
-          Back
-        </button>
+        <BackButton />
 
         <div className="grid gap-8 lg:grid-cols-[1fr_380px]">
           {/* Main image */}
