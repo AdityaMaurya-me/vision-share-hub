@@ -1,5 +1,5 @@
-import { Link } from "react-router-dom";
-import { MoreHorizontal, Bookmark } from "lucide-react";
+import { Link, useNavigate } from "react-router-dom";
+import { MoreHorizontal, Bookmark, Download, Flag, FolderPlus } from "lucide-react";
 import { useState, useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
@@ -11,8 +11,14 @@ import {
   DialogTitle,
   DialogDescription,
 } from "@/components/ui/dialog";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
-import { useNavigate } from "react-router-dom";
+import AddToCollectionDialog from "@/components/AddToCollectionDialog";
 
 interface PhotoCardProps {
   id: string;
@@ -28,6 +34,7 @@ const PhotoCard = ({ id, image, caption, username, gear, aperture, iso }: PhotoC
   const [showMenu, setShowMenu] = useState(false);
   const [saved, setSaved] = useState(false);
   const [showAuthDialog, setShowAuthDialog] = useState(false);
+  const [showCollectionDialog, setShowCollectionDialog] = useState(false);
   const { user } = useAuth();
   const navigate = useNavigate();
 
@@ -62,6 +69,30 @@ const PhotoCard = ({ id, image, caption, username, gear, aperture, iso }: PhotoC
     }
   };
 
+  const handleDownload = async (e: Event) => {
+    e.preventDefault();
+    try {
+      const response = await fetch(image);
+      const blob = await response.blob();
+      const link = document.createElement("a");
+      link.href = URL.createObjectURL(blob);
+      link.download = `visionx-${id}.jpg`;
+      link.click();
+      URL.revokeObjectURL(link.href);
+      toast.success("Download started");
+    } catch {
+      toast.error("Failed to download");
+    }
+  };
+
+  const handleAddToCollection = () => {
+    if (!user) {
+      setShowAuthDialog(true);
+      return;
+    }
+    setShowCollectionDialog(true);
+  };
+
   return (
     <>
       <div
@@ -77,9 +108,33 @@ const PhotoCard = ({ id, image, caption, username, gear, aperture, iso }: PhotoC
             >
               <Bookmark className={`h-4 w-4 ${saved ? "fill-primary text-primary" : ""}`} />
             </button>
-            <button className="flex h-8 w-8 items-center justify-center rounded-full bg-background/60 text-foreground">
-              <MoreHorizontal className="h-4 w-4" />
-            </button>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <button
+                  onClick={(e) => e.preventDefault()}
+                  className="flex h-8 w-8 items-center justify-center rounded-full bg-background/60 text-foreground transition-colors hover:bg-background/80"
+                >
+                  <MoreHorizontal className="h-4 w-4" />
+                </button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" onClick={(e) => e.stopPropagation()}>
+                <DropdownMenuItem onSelect={handleDownload} className="gap-2">
+                  <Download className="h-4 w-4" />
+                  Download
+                </DropdownMenuItem>
+                <DropdownMenuItem onSelect={(e) => { e.preventDefault(); handleAddToCollection(); }} className="gap-2">
+                  <FolderPlus className="h-4 w-4" />
+                  Add to collection
+                </DropdownMenuItem>
+                <DropdownMenuItem
+                  onSelect={() => toast.info("Report submitted")}
+                  className="gap-2 text-destructive focus:text-destructive"
+                >
+                  <Flag className="h-4 w-4" />
+                  Report
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
         )}
 
@@ -124,9 +179,9 @@ const PhotoCard = ({ id, image, caption, username, gear, aperture, iso }: PhotoC
       <Dialog open={showAuthDialog} onOpenChange={setShowAuthDialog}>
         <DialogContent className="sm:max-w-sm">
           <DialogHeader>
-            <DialogTitle>Sign in to save photos</DialogTitle>
+            <DialogTitle>Sign in required</DialogTitle>
             <DialogDescription>
-              You need to be logged in to save photos. Please log in or create an account.
+              You need to be logged in to do that. Please log in or create an account.
             </DialogDescription>
           </DialogHeader>
           <div className="flex flex-col gap-3 pt-2">
@@ -135,6 +190,12 @@ const PhotoCard = ({ id, image, caption, username, gear, aperture, iso }: PhotoC
           </div>
         </DialogContent>
       </Dialog>
+
+      <AddToCollectionDialog
+        photoId={id}
+        open={showCollectionDialog}
+        onOpenChange={setShowCollectionDialog}
+      />
     </>
   );
 };
