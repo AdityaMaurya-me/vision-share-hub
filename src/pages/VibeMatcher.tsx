@@ -8,6 +8,7 @@ import PhotoCard from "@/components/PhotoCard";
 import { samplePhotos } from "@/data/samplePhotos";
 import { vibes } from "@/data/vibes";
 import { supabase } from "@/integrations/supabase/client";
+import usePersistentState from "@/hooks/usePersistentState";
 
 interface DbPhoto {
   id: string;
@@ -24,9 +25,15 @@ const VibeMatcher = () => {
   useScrollRestore();
   const [searchParams] = useSearchParams();
   const initialVibe = searchParams.get("vibe");
-  const [selected, setSelected] = useState<string[]>(initialVibe ? [initialVibe] : []);
+  const [selected, setSelected] = usePersistentState<string[]>(
+    "vibe_selected",
+    initialVibe ? [initialVibe] : []
+  );
   // Vibes user has actually committed via "Find My Gear"
-  const [appliedVibes, setAppliedVibes] = useState<string[]>(initialVibe ? [initialVibe] : []);
+  const [appliedVibes, setAppliedVibes] = usePersistentState<string[]>(
+    "vibe_applied",
+    initialVibe ? [initialVibe] : []
+  );
   const [dbPhotos, setDbPhotos] = useState<DbPhoto[]>([]);
   const [profiles, setProfiles] = useState<Record<string, string>>({});
 
