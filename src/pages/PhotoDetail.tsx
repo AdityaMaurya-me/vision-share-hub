@@ -9,8 +9,10 @@ import { Textarea } from "@/components/ui/textarea";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import {
   ArrowLeft, UserPlus, Send, Camera, Aperture, Gauge,
-  Heart, Share2, Bookmark, MoreHorizontal, Download, Flag, Trash2, Aperture as LensIcon,
+  Heart, Share2, Bookmark, MoreHorizontal, Download, Flag, Trash2, Aperture as LensIcon, FolderPlus,
 } from "lucide-react";
+import AddToCollectionDialog from "@/components/AddToCollectionDialog";
+import ReportDialog from "@/components/ReportDialog";
 import BackButton from "@/components/BackButton";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
@@ -34,6 +36,8 @@ const PhotoDetail = () => {
   const [authDialogMessage, setAuthDialogMessage] = useState("You need to be logged in. Please log in or create an account.");
   const [liked, setLiked] = useState(false);
   const [saved, setSaved] = useState(false);
+  const [showCollectionDialog, setShowCollectionDialog] = useState(false);
+  const [showReportDialog, setShowReportDialog] = useState(false);
   const [comments, setComments] = useState<{ id: string; user: string; text: string; isMine?: boolean; likes: number; likedByMe: boolean }[]>([
     { id: "c1", user: "pixel_hunter", text: "Incredible composition! The light is perfect.", likes: 3, likedByMe: false },
     { id: "c2", user: "analog_soul", text: "What time of day was this shot?", likes: 1, likedByMe: false },
@@ -245,7 +249,14 @@ const PhotoDetail = () => {
                       <Download className="h-4 w-4" />
                       Download
                     </DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => toast.info("Report submitted")} className="gap-2 text-destructive focus:text-destructive">
+                    <DropdownMenuItem
+                      onClick={() => requireAuth("You need to be logged in to add to collections.", () => setShowCollectionDialog(true))}
+                      className="gap-2"
+                    >
+                      <FolderPlus className="h-4 w-4" />
+                      Add to collection
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => setShowReportDialog(true)} className="gap-2 text-destructive focus:text-destructive">
                       <Flag className="h-4 w-4" />
                       Report
                     </DropdownMenuItem>
