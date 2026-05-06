@@ -433,6 +433,9 @@ const PhotoDetail = () => {
           </div>
         </DialogContent>
       </Dialog>
+
+      <AddToCollectionDialog photoId={id!} open={showCollectionDialog} onOpenChange={setShowCollectionDialog} />
+      <ReportDialog open={showReportDialog} onOpenChange={setShowReportDialog} photoId={id} />
     </div>
   );
 };
