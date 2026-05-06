@@ -19,6 +19,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
 import AddToCollectionDialog from "@/components/AddToCollectionDialog";
+import ReportDialog from "@/components/ReportDialog";
 
 interface PhotoCardProps {
   id: string;
@@ -35,6 +36,7 @@ const PhotoCard = ({ id, image, caption, username, gear, aperture, iso }: PhotoC
   const [saved, setSaved] = useState(false);
   const [showAuthDialog, setShowAuthDialog] = useState(false);
   const [showCollectionDialog, setShowCollectionDialog] = useState(false);
+  const [showReportDialog, setShowReportDialog] = useState(false);
   const { user } = useAuth();
   const navigate = useNavigate();
 
@@ -127,7 +129,7 @@ const PhotoCard = ({ id, image, caption, username, gear, aperture, iso }: PhotoC
                   Add to collection
                 </DropdownMenuItem>
                 <DropdownMenuItem
-                  onSelect={() => toast.info("Report submitted")}
+                  onSelect={(e) => { e.preventDefault(); setShowReportDialog(true); }}
                   className="gap-2 text-destructive focus:text-destructive"
                 >
                   <Flag className="h-4 w-4" />
@@ -196,6 +198,8 @@ const PhotoCard = ({ id, image, caption, username, gear, aperture, iso }: PhotoC
         open={showCollectionDialog}
         onOpenChange={setShowCollectionDialog}
       />
+
+      <ReportDialog open={showReportDialog} onOpenChange={setShowReportDialog} photoId={id} />
     </>
   );
 };
