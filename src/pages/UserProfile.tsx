@@ -4,7 +4,9 @@ import Navbar from "@/components/Navbar";
 import BackButton from "@/components/BackButton";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Folder } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Folder, UserPlus, UserCheck, Share2 } from "lucide-react";
+import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { samplePhotos } from "@/data/samplePhotos";
 import PhotoCard from "@/components/PhotoCard";
@@ -38,6 +40,16 @@ const UserProfile = () => {
   const [collections, setCollections] = useState<Collection[]>([]);
   const [activeCollection, setActiveCollection] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+  const [isFollowing, setIsFollowing] = useState(false);
+
+  const handleShare = async () => {
+    const url = window.location.href;
+    if (navigator.share) {
+      try { await navigator.share({ title: `@${username}`, url }); return; } catch {}
+    }
+    await navigator.clipboard.writeText(url);
+    toast.success("Profile link copied!");
+  };
 
   // Sample photos uploaded by this username (for the demo data)
   const sampleUploads = samplePhotos.filter((p) => p.username === username);
@@ -135,10 +147,32 @@ const UserProfile = () => {
           </Avatar>
 
           <div className="flex-1">
-            <h1 className="text-2xl font-bold">@{profile?.username || username}</h1>
-            {profile?.bio && (
-              <p className="mt-1 max-w-xl text-sm text-muted-foreground">{profile.bio}</p>
-            )}
+            <div className="flex flex-wrap items-start justify-between gap-3">
+              <div>
+                <h1 className="text-2xl font-bold">@{profile?.username || username}</h1>
+                {profile?.bio && (
+                  <p className="mt-1 max-w-xl text-sm text-muted-foreground">{profile.bio}</p>
+                )}
+              </div>
+              <div className="flex gap-2">
+                <Button
+                  size="sm"
+                  variant={isFollowing ? "secondary" : "default"}
+                  onClick={() => {
+                    setIsFollowing((v) => !v);
+                    toast.success(isFollowing ? "Unfollowed" : `Following @${username}`);
+                  }}
+                  className="gap-1.5"
+                >
+                  {isFollowing ? <UserCheck className="h-4 w-4" /> : <UserPlus className="h-4 w-4" />}
+                  {isFollowing ? "Following" : "Follow"}
+                </Button>
+                <Button size="sm" variant="outline" onClick={handleShare} className="gap-1.5">
+                  <Share2 className="h-4 w-4" />
+                  Share
+                </Button>
+              </div>
+            </div>
             <div className="mt-4 flex gap-8">
               <div>
                 <p className="text-xl font-bold">{totalUploads}</p>

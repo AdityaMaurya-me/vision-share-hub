@@ -171,11 +171,11 @@ const PhotoDetail = () => {
 
         <div className="grid gap-8 lg:grid-cols-[1fr_380px]">
           {/* Main image */}
-          <div className="overflow-hidden rounded-xl border border-border">
+          <div className="flex items-center justify-center overflow-hidden rounded-xl border border-border bg-secondary/30">
             <img
               src={photo.image}
               alt={photo.caption || "Community photo"}
-              className="w-full object-cover"
+              className="max-h-[80vh] w-auto max-w-full object-contain"
             />
           </div>
 
@@ -296,7 +296,7 @@ const PhotoDetail = () => {
                     {photo.tags?.map((tag) => (
                       <Link
                         key={tag}
-                        to={`/vibe-matcher?vibe=${tag}`}
+                        to={`/explore?q=${encodeURIComponent(tag)}`}
                         className="inline-flex items-center rounded-full border border-border bg-secondary px-3 py-1 text-xs text-muted-foreground transition-colors hover:border-primary/50 hover:text-foreground"
                       >
                         {getVibeLabel(tag)}

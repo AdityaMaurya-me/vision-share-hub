@@ -32,7 +32,7 @@ interface PhotoCardProps {
 }
 
 const PhotoCard = ({ id, image, caption, username, gear, aperture, iso }: PhotoCardProps) => {
-  const [showMenu, setShowMenu] = useState(false);
+  
   const [saved, setSaved] = useState(false);
   const [showAuthDialog, setShowAuthDialog] = useState(false);
   const [showCollectionDialog, setShowCollectionDialog] = useState(false);
@@ -97,48 +97,42 @@ const PhotoCard = ({ id, image, caption, username, gear, aperture, iso }: PhotoC
 
   return (
     <>
-      <div
-        className="masonry-item group relative overflow-hidden rounded-xl border border-border bg-card transition-colors hover:border-surface-hover"
-        onMouseEnter={() => setShowMenu(true)}
-        onMouseLeave={() => setShowMenu(false)}
-      >
-        {showMenu && (
-          <div className="absolute right-2 top-2 z-10 flex gap-1.5 opacity-0 transition-opacity group-hover:opacity-100">
-            <button
-              onClick={handleSave}
-              className="flex h-8 w-8 items-center justify-center rounded-full bg-background/60 text-foreground transition-colors hover:bg-background/80"
-            >
-              <Bookmark className={`h-4 w-4 ${saved ? "fill-primary text-primary" : ""}`} />
-            </button>
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <button
-                  onClick={(e) => e.preventDefault()}
-                  className="flex h-8 w-8 items-center justify-center rounded-full bg-background/60 text-foreground transition-colors hover:bg-background/80"
-                >
-                  <MoreHorizontal className="h-4 w-4" />
-                </button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" onClick={(e) => e.stopPropagation()}>
-                <DropdownMenuItem onSelect={handleDownload} className="gap-2">
-                  <Download className="h-4 w-4" />
-                  Download
-                </DropdownMenuItem>
-                <DropdownMenuItem onSelect={(e) => { e.preventDefault(); handleAddToCollection(); }} className="gap-2">
-                  <FolderPlus className="h-4 w-4" />
-                  Add to collection
-                </DropdownMenuItem>
-                <DropdownMenuItem
-                  onSelect={(e) => { e.preventDefault(); setShowReportDialog(true); }}
-                  className="gap-2 text-destructive focus:text-destructive"
-                >
-                  <Flag className="h-4 w-4" />
-                  Report
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-          </div>
-        )}
+      <div className="masonry-item group relative overflow-hidden rounded-xl border border-border bg-card transition-colors hover:border-surface-hover">
+        <div className="absolute right-2 top-2 z-10 flex gap-1.5 opacity-0 transition-opacity group-hover:opacity-100">
+          <button
+            onClick={handleSave}
+            className="flex h-8 w-8 items-center justify-center rounded-full bg-background/60 text-foreground transition-colors hover:bg-background/80"
+          >
+            <Bookmark className={`h-4 w-4 ${saved ? "fill-primary text-primary" : ""}`} />
+          </button>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <button
+                onClick={(e) => e.stopPropagation()}
+                className="flex h-8 w-8 items-center justify-center rounded-full bg-background/60 text-foreground transition-colors hover:bg-background/80"
+              >
+                <MoreHorizontal className="h-4 w-4" />
+              </button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" onClick={(e) => e.stopPropagation()}>
+              <DropdownMenuItem onSelect={(e) => { e.preventDefault(); handleDownload(e as unknown as Event); }} className="gap-2">
+                <Download className="h-4 w-4" />
+                Download
+              </DropdownMenuItem>
+              <DropdownMenuItem onSelect={(e) => { e.preventDefault(); handleAddToCollection(); }} className="gap-2">
+                <FolderPlus className="h-4 w-4" />
+                Add to collection
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                onSelect={(e) => { e.preventDefault(); setShowReportDialog(true); }}
+                className="gap-2 text-destructive focus:text-destructive"
+              >
+                <Flag className="h-4 w-4" />
+                Report
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
 
         <Link to={`/photo/${id}`}>
           <img
