@@ -171,11 +171,11 @@ const PhotoDetail = () => {
 
         <div className="grid gap-8 lg:grid-cols-[1fr_380px]">
           {/* Main image */}
-          <div className="overflow-hidden rounded-xl border border-border">
+          <div className="flex items-center justify-center overflow-hidden rounded-xl border border-border bg-secondary/30">
             <img
               src={photo.image}
               alt={photo.caption || "Community photo"}
-              className="w-full object-cover"
+              className="max-h-[80vh] w-auto max-w-full object-contain"
             />
           </div>
 
