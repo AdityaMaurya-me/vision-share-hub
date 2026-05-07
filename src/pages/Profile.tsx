@@ -174,43 +174,44 @@ const Profile = () => {
       <Navbar />
       <main className="container pt-24 pb-16">
         {/* Profile Header */}
-        <div className="flex items-start gap-6 mb-8">
-          <Avatar className="h-20 w-20 border-2 border-primary">
-            <AvatarImage src={profile?.avatar_url || ""} />
-            <AvatarFallback className="bg-primary text-primary-foreground text-xl">
+        <section className="mb-12 flex flex-col items-center text-center">
+          <Avatar className="h-32 w-32 border-4 border-primary/40 shadow-xl ring-4 ring-primary/10">
+            <AvatarImage src={profile?.avatar_url || ""} className="object-cover" />
+            <AvatarFallback className="bg-primary text-3xl text-primary-foreground">
               {initials}
             </AvatarFallback>
           </Avatar>
 
-          <div className="flex-1">
-            <div className="flex items-center gap-6">
-              <h1 className="text-2xl font-bold">{username}</h1>
-              <div className="flex gap-8">
-                <div className="text-center">
-                  <p className="text-xl font-bold">{uploads.length}</p>
-                  <p className="text-sm text-muted-foreground">Uploaded</p>
-                </div>
-                <div className="text-center">
-                  <p className="text-xl font-bold">{savedPhotoIds.length}</p>
-                  <p className="text-sm text-muted-foreground">Saved</p>
-                </div>
-              </div>
+          <h1 className="mt-5 text-3xl font-bold tracking-tight">{username}</h1>
+          <p className="mt-2 max-w-xl text-sm leading-relaxed text-muted-foreground">
+            {profile?.bio || "No bio yet — tell the community what inspires your lens."}
+          </p>
+
+          <div className="mt-6 flex items-center gap-10">
+            <div className="text-center">
+              <p className="text-2xl font-bold">{uploads.length}</p>
+              <p className="text-xs uppercase tracking-widest text-muted-foreground">Uploads</p>
             </div>
+            <div className="h-10 w-px bg-border" />
+            <div className="text-center">
+              <p className="text-2xl font-bold">0</p>
+              <p className="text-xs uppercase tracking-widest text-muted-foreground">Followers</p>
+            </div>
+          </div>
+
+          <div className="mt-6 flex items-center gap-3">
             <Button
               size="sm"
-              className="mt-2 gradient-bg border-0 text-primary-foreground"
+              className="gradient-bg border-0 text-primary-foreground"
               asChild
             >
               <Link to="/edit-profile">Edit Profile</Link>
             </Button>
-            <button
-              onClick={handleShare}
-              className="mt-2 ml-3 inline-flex items-center gap-1.5 text-sm text-primary hover:underline"
-            >
-              <Share2 className="h-4 w-4" /> Share Profile
-            </button>
+            <Button size="sm" variant="outline" onClick={handleShare} className="gap-1.5">
+              <Share2 className="h-4 w-4" /> Share
+            </Button>
           </div>
-        </div>
+        </section>
 
         {/* Tabs */}
         <Tabs defaultValue="uploads" className="w-full">

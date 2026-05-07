@@ -138,53 +138,54 @@ const UserProfile = () => {
       <main className="container pt-24 pb-16">
         <BackButton />
 
-        <div className="mb-8 flex items-start gap-6">
-          <Avatar className="h-24 w-24 border-2 border-primary">
-            <AvatarImage src={profile?.avatar_url || ""} />
-            <AvatarFallback className="bg-primary text-xl text-primary-foreground">
+        <section className="mb-12 flex flex-col items-center text-center">
+          <Avatar className="h-32 w-32 border-4 border-primary/40 shadow-xl ring-4 ring-primary/10">
+            <AvatarImage src={profile?.avatar_url || ""} className="object-cover" />
+            <AvatarFallback className="bg-primary text-3xl text-primary-foreground">
               {initials}
             </AvatarFallback>
           </Avatar>
 
-          <div className="flex-1">
-            <div className="flex flex-wrap items-start justify-between gap-3">
-              <div>
-                <h1 className="text-2xl font-bold">@{profile?.username || username}</h1>
-                {profile?.bio && (
-                  <p className="mt-1 max-w-xl text-sm text-muted-foreground">{profile.bio}</p>
-                )}
-              </div>
-              <div className="flex gap-2">
-                <Button
-                  size="sm"
-                  variant={isFollowing ? "secondary" : "default"}
-                  onClick={() => {
-                    setIsFollowing((v) => !v);
-                    toast.success(isFollowing ? "Unfollowed" : `Following @${username}`);
-                  }}
-                  className="gap-1.5"
-                >
-                  {isFollowing ? <UserCheck className="h-4 w-4" /> : <UserPlus className="h-4 w-4" />}
-                  {isFollowing ? "Following" : "Follow"}
-                </Button>
-                <Button size="sm" variant="outline" onClick={handleShare} className="gap-1.5">
-                  <Share2 className="h-4 w-4" />
-                  Share
-                </Button>
-              </div>
+          <h1 className="mt-5 text-3xl font-bold tracking-tight">@{profile?.username || username}</h1>
+          <p className="mt-2 max-w-xl text-sm leading-relaxed text-muted-foreground">
+            {profile?.bio || "No bio yet."}
+          </p>
+
+          <div className="mt-6 flex items-center gap-10">
+            <div className="text-center">
+              <p className="text-2xl font-bold">{totalUploads}</p>
+              <p className="text-xs uppercase tracking-widest text-muted-foreground">Uploads</p>
             </div>
-            <div className="mt-4 flex gap-8">
-              <div>
-                <p className="text-xl font-bold">{totalUploads}</p>
-                <p className="text-sm text-muted-foreground">Uploads</p>
-              </div>
-              <div>
-                <p className="text-xl font-bold">{collections.length}</p>
-                <p className="text-sm text-muted-foreground">Collections</p>
-              </div>
+            <div className="h-10 w-px bg-border" />
+            <div className="text-center">
+              <p className="text-2xl font-bold">0</p>
+              <p className="text-xs uppercase tracking-widest text-muted-foreground">Followers</p>
+            </div>
+            <div className="h-10 w-px bg-border" />
+            <div className="text-center">
+              <p className="text-2xl font-bold">{collections.length}</p>
+              <p className="text-xs uppercase tracking-widest text-muted-foreground">Collections</p>
             </div>
           </div>
-        </div>
+
+          <div className="mt-6 flex items-center gap-3">
+            <Button
+              size="sm"
+              variant={isFollowing ? "secondary" : "default"}
+              onClick={() => {
+                setIsFollowing((v) => !v);
+                toast.success(isFollowing ? "Unfollowed" : `Following @${username}`);
+              }}
+              className="gap-1.5"
+            >
+              {isFollowing ? <UserCheck className="h-4 w-4" /> : <UserPlus className="h-4 w-4" />}
+              {isFollowing ? "Following" : "Follow"}
+            </Button>
+            <Button size="sm" variant="outline" onClick={handleShare} className="gap-1.5">
+              <Share2 className="h-4 w-4" /> Share
+            </Button>
+          </div>
+        </section>
 
         <Tabs defaultValue="uploads" className="w-full">
           <TabsList className="bg-secondary">
