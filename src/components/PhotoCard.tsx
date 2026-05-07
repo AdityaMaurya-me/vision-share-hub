@@ -20,6 +20,7 @@ import {
 import { Button } from "@/components/ui/button";
 import AddToCollectionDialog from "@/components/AddToCollectionDialog";
 import ReportDialog from "@/components/ReportDialog";
+import FramedImage from "@/components/FramedImage";
 
 interface PhotoCardProps {
   id: string;
@@ -134,13 +135,8 @@ const PhotoCard = ({ id, image, caption, username, gear, aperture, iso }: PhotoC
           </DropdownMenu>
         </div>
 
-        <Link to={`/photo/${id}`}>
-          <img
-            src={image}
-            alt={caption || "Community photo"}
-            className="w-full cursor-pointer object-cover transition-opacity hover:opacity-90"
-            loading="lazy"
-          />
+        <Link to={`/photo/${id}`} className="block">
+          <FramedImage src={image} alt={caption || "Community photo"} />
         </Link>
 
         <div className="p-3">
