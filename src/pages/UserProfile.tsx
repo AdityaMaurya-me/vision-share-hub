@@ -40,6 +40,16 @@ const UserProfile = () => {
   const [collections, setCollections] = useState<Collection[]>([]);
   const [activeCollection, setActiveCollection] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+  const [isFollowing, setIsFollowing] = useState(false);
+
+  const handleShare = async () => {
+    const url = window.location.href;
+    if (navigator.share) {
+      try { await navigator.share({ title: `@${username}`, url }); return; } catch {}
+    }
+    await navigator.clipboard.writeText(url);
+    toast.success("Profile link copied!");
+  };
 
   // Sample photos uploaded by this username (for the demo data)
   const sampleUploads = samplePhotos.filter((p) => p.username === username);
