@@ -296,7 +296,7 @@ const PhotoDetail = () => {
                     {photo.tags?.map((tag) => (
                       <Link
                         key={tag}
-                        to={`/vibe-matcher?vibe=${tag}`}
+                        to={`/explore?q=${encodeURIComponent(tag)}`}
                         className="inline-flex items-center rounded-full border border-border bg-secondary px-3 py-1 text-xs text-muted-foreground transition-colors hover:border-primary/50 hover:text-foreground"
                       >
                         {getVibeLabel(tag)}
