@@ -147,10 +147,32 @@ const UserProfile = () => {
           </Avatar>
 
           <div className="flex-1">
-            <h1 className="text-2xl font-bold">@{profile?.username || username}</h1>
-            {profile?.bio && (
-              <p className="mt-1 max-w-xl text-sm text-muted-foreground">{profile.bio}</p>
-            )}
+            <div className="flex flex-wrap items-start justify-between gap-3">
+              <div>
+                <h1 className="text-2xl font-bold">@{profile?.username || username}</h1>
+                {profile?.bio && (
+                  <p className="mt-1 max-w-xl text-sm text-muted-foreground">{profile.bio}</p>
+                )}
+              </div>
+              <div className="flex gap-2">
+                <Button
+                  size="sm"
+                  variant={isFollowing ? "secondary" : "default"}
+                  onClick={() => {
+                    setIsFollowing((v) => !v);
+                    toast.success(isFollowing ? "Unfollowed" : `Following @${username}`);
+                  }}
+                  className="gap-1.5"
+                >
+                  {isFollowing ? <UserCheck className="h-4 w-4" /> : <UserPlus className="h-4 w-4" />}
+                  {isFollowing ? "Following" : "Follow"}
+                </Button>
+                <Button size="sm" variant="outline" onClick={handleShare} className="gap-1.5">
+                  <Share2 className="h-4 w-4" />
+                  Share
+                </Button>
+              </div>
+            </div>
             <div className="mt-4 flex gap-8">
               <div>
                 <p className="text-xl font-bold">{totalUploads}</p>
