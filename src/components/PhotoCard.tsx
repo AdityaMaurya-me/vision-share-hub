@@ -20,6 +20,7 @@ import {
 import { Button } from "@/components/ui/button";
 import AddToCollectionDialog from "@/components/AddToCollectionDialog";
 import ReportDialog from "@/components/ReportDialog";
+import FramedImage from "@/components/FramedImage";
 
 interface PhotoCardProps {
   id: string;
