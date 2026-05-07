@@ -55,13 +55,14 @@ const Explore = () => {
       });
   }, []);
 
-  // If we landed with ?q=..., commit it once.
+  // React to ?q=... changes (e.g., when navigating from a tag link).
   useEffect(() => {
-    if (initialQuery && !history.includes(initialQuery)) {
-      saveToHistory(initialQuery);
+    const q = searchParams.get("q") || "";
+    if (q && q !== activeQuery) {
+      runSearch(q);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [searchParams]);
 
   const saveToHistory = (q: string) => {
     const trimmed = q.trim();
