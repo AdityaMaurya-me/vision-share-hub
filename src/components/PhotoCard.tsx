@@ -32,7 +32,7 @@ interface PhotoCardProps {
 }
 
 const PhotoCard = ({ id, image, caption, username, gear, aperture, iso }: PhotoCardProps) => {
-  const [showMenu, setShowMenu] = useState(false);
+  
   const [saved, setSaved] = useState(false);
   const [showAuthDialog, setShowAuthDialog] = useState(false);
   const [showCollectionDialog, setShowCollectionDialog] = useState(false);
