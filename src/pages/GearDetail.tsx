@@ -40,11 +40,25 @@ const GearDetail = () => {
   const loadAll = async () => {
     if (!slug) return;
     setLoading(true);
-    const { data: g } = await supabase
+    let { data: g } = await supabase
       .from("gears")
       .select("id, slug, name, gear_type, image_url, description, created_by")
       .eq("slug", slug)
       .maybeSingle();
+
+    // Auto-create a stub if a signed-in user lands on a missing slug
+    // (e.g. coming from a sample-photo gear link)
+    if (!g && user) {
+      const name = slug.split("-").map((w) => w.charAt(0).toUpperCase() + w.slice(1)).join(" ");
+      const { guessGearType } = await import("@/lib/gear");
+      const { data: created } = await supabase
+        .from("gears")
+        .insert({ slug, name, gear_type: guessGearType(name), created_by: user.id })
+        .select("id, slug, name, gear_type, image_url, description, created_by")
+        .single();
+      g = created;
+    }
+
     setGear(g);
     if (g) {
       setEdit({ image_url: g.image_url || "", description: g.description || "", gear_type: g.gear_type });
