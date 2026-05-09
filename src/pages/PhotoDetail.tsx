@@ -318,23 +318,32 @@ const PhotoDetail = () => {
               <h3 className="mb-3 text-xs font-semibold uppercase tracking-widest text-muted-foreground">
                 Gear & Settings
               </h3>
-              <div className="flex items-center gap-2 text-sm">
+              <Link
+                to={`/explore?q=${encodeURIComponent(photo.gear)}`}
+                className="flex items-center gap-2 text-sm transition-colors hover:text-primary"
+              >
                 <Camera className="h-4 w-4 text-muted-foreground" />
                 <span>{photo.gear}</span>
-              </div>
+              </Link>
               {(photo.aperture || photo.iso) && (
                 <div className="mt-3 flex flex-wrap gap-2">
                   {photo.aperture && (
-                    <span className="inline-flex items-center gap-1.5 rounded-md bg-secondary px-2.5 py-1 text-xs text-muted-foreground">
+                    <Link
+                      to={`/explore?q=${encodeURIComponent(photo.aperture)}`}
+                      className="inline-flex items-center gap-1.5 rounded-md bg-secondary px-2.5 py-1 text-xs text-muted-foreground transition-colors hover:border-primary/50 hover:text-foreground border border-transparent"
+                    >
                       <Aperture className="h-3 w-3" />
                       {photo.aperture}
-                    </span>
+                    </Link>
                   )}
                   {photo.iso && (
-                    <span className="inline-flex items-center gap-1.5 rounded-md bg-secondary px-2.5 py-1 text-xs text-muted-foreground">
+                    <Link
+                      to={`/explore?q=${encodeURIComponent(`ISO ${photo.iso}`)}`}
+                      className="inline-flex items-center gap-1.5 rounded-md bg-secondary px-2.5 py-1 text-xs text-muted-foreground transition-colors hover:border-primary/50 hover:text-foreground border border-transparent"
+                    >
                       <Gauge className="h-3 w-3" />
                       ISO {photo.iso}
-                    </span>
+                    </Link>
                   )}
                 </div>
               )}
