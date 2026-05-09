@@ -7,7 +7,7 @@ import Navbar from "@/components/Navbar";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Share2, Trash2, FolderPlus, Folder, Plus, X } from "lucide-react";
+import { Share2, Trash2, FolderPlus, Folder, Plus, X, Camera, Aperture as LensIcon, Smartphone, Plane, Lightbulb, Mic, Wrench, Package } from "lucide-react";
 import { toast } from "sonner";
 import PhotoCard from "@/components/PhotoCard";
 import { samplePhotos } from "@/data/samplePhotos";
@@ -45,6 +45,11 @@ const Profile = () => {
   const [savedPhotoIds, setSavedPhotoIds] = useState<string[]>([]);
   const [uploads, setUploads] = useState<UploadedPhoto[]>([]);
   const [collections, setCollections] = useState<Collection[]>([]);
+  const [kitCollections, setKitCollections] = useState<Collection[]>([]);
+  const [kitGears, setKitGears] = useState<{ id: string; gear_id: string; collection_id: string | null; gears: { id: string; slug: string; name: string; gear_type: string; image_url: string | null } | null }[]>([]);
+  const [activeKitCollection, setActiveKitCollection] = useState<string | null>(null);
+  const [creatingKitCollection, setCreatingKitCollection] = useState(false);
+  const [newKitCollectionName, setNewKitCollectionName] = useState("");
   const [collectionCounts, setCollectionCounts] = useState<Record<string, number>>({});
   const [activeCollection, setActiveCollection] = useState<string | null>(null);
   const [collectionPhotoIds, setCollectionPhotoIds] = useState<string[]>([]);
@@ -83,21 +88,30 @@ const Profile = () => {
     (async () => {
       const { data: cols } = await supabase
         .from("collections")
-        .select("id, name")
+        .select("id, name, kind")
         .eq("user_id", user.id)
         .order("created_at", { ascending: false });
       if (cols) {
-        setCollections(cols);
+        const photoCols = cols.filter((c: any) => (c.kind || "photos") === "photos");
+        const gearCols = cols.filter((c: any) => c.kind === "gears");
+        setCollections(photoCols);
+        setKitCollections(gearCols);
         const { data: cps } = await supabase
           .from("collection_photos")
           .select("collection_id")
           .eq("user_id", user.id);
         const counts: Record<string, number> = {};
-        cps?.forEach((c) => {
-          counts[c.collection_id] = (counts[c.collection_id] || 0) + 1;
-        });
+        cps?.forEach((c) => { counts[c.collection_id] = (counts[c.collection_id] || 0) + 1; });
         setCollectionCounts(counts);
       }
+
+      // Load saved gears
+      const { data: kg } = await supabase
+        .from("kit_gears")
+        .select("id, gear_id, collection_id, gears:gear_id(id, slug, name, gear_type, image_url)")
+        .eq("user_id", user.id)
+        .order("created_at", { ascending: false });
+      if (kg) setKitGears(kg as any);
     })();
   }, [user]);
 
