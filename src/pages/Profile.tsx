@@ -7,7 +7,7 @@ import Navbar from "@/components/Navbar";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Share2, Trash2, FolderPlus, Folder, Plus, X } from "lucide-react";
+import { Share2, Trash2, FolderPlus, Folder, Plus, X, Camera, Aperture as LensIcon, Smartphone, Plane, Lightbulb, Mic, Wrench, Package } from "lucide-react";
 import { toast } from "sonner";
 import PhotoCard from "@/components/PhotoCard";
 import { samplePhotos } from "@/data/samplePhotos";
@@ -45,6 +45,11 @@ const Profile = () => {
   const [savedPhotoIds, setSavedPhotoIds] = useState<string[]>([]);
   const [uploads, setUploads] = useState<UploadedPhoto[]>([]);
   const [collections, setCollections] = useState<Collection[]>([]);
+  const [kitCollections, setKitCollections] = useState<Collection[]>([]);
+  const [kitGears, setKitGears] = useState<{ id: string; gear_id: string; collection_id: string | null; gears: { id: string; slug: string; name: string; gear_type: string; image_url: string | null } | null }[]>([]);
+  const [activeKitCollection, setActiveKitCollection] = useState<string | null>(null);
+  const [creatingKitCollection, setCreatingKitCollection] = useState(false);
+  const [newKitCollectionName, setNewKitCollectionName] = useState("");
   const [collectionCounts, setCollectionCounts] = useState<Record<string, number>>({});
   const [activeCollection, setActiveCollection] = useState<string | null>(null);
   const [collectionPhotoIds, setCollectionPhotoIds] = useState<string[]>([]);
@@ -83,21 +88,30 @@ const Profile = () => {
     (async () => {
       const { data: cols } = await supabase
         .from("collections")
-        .select("id, name")
+        .select("id, name, kind")
         .eq("user_id", user.id)
         .order("created_at", { ascending: false });
       if (cols) {
-        setCollections(cols);
+        const photoCols = cols.filter((c: any) => (c.kind || "photos") === "photos");
+        const gearCols = cols.filter((c: any) => c.kind === "gears");
+        setCollections(photoCols);
+        setKitCollections(gearCols);
         const { data: cps } = await supabase
           .from("collection_photos")
           .select("collection_id")
           .eq("user_id", user.id);
         const counts: Record<string, number> = {};
-        cps?.forEach((c) => {
-          counts[c.collection_id] = (counts[c.collection_id] || 0) + 1;
-        });
+        cps?.forEach((c) => { counts[c.collection_id] = (counts[c.collection_id] || 0) + 1; });
         setCollectionCounts(counts);
       }
+
+      // Load saved gears
+      const { data: kg } = await supabase
+        .from("kit_gears")
+        .select("id, gear_id, collection_id, gears:gear_id(id, slug, name, gear_type, image_url)")
+        .eq("user_id", user.id)
+        .order("created_at", { ascending: false });
+      if (kg) setKitGears(kg as any);
     })();
   }, [user]);
 
@@ -119,30 +133,45 @@ const Profile = () => {
     if (!user || !newCollectionName.trim()) return;
     const { data, error } = await supabase
       .from("collections")
-      .insert({ user_id: user.id, name: newCollectionName.trim() })
+      .insert({ user_id: user.id, name: newCollectionName.trim(), kind: "photos" })
       .select("id, name")
       .single();
-    if (error || !data) {
-      toast.error("Could not create collection");
-      return;
-    }
+    if (error || !data) { toast.error("Could not create collection"); return; }
     setCollections((prev) => [data, ...prev]);
-    setNewCollectionName("");
-    setCreatingCollection(false);
+    setNewCollectionName(""); setCreatingCollection(false);
     toast.success(`Created "${data.name}"`);
   };
 
   const handleDeleteCollection = async () => {
     if (!collectionToDelete) return;
     const { error } = await supabase.from("collections").delete().eq("id", collectionToDelete.id);
-    if (error) {
-      toast.error("Could not delete");
-    } else {
+    if (error) { toast.error("Could not delete"); }
+    else {
       setCollections((prev) => prev.filter((c) => c.id !== collectionToDelete.id));
+      setKitCollections((prev) => prev.filter((c) => c.id !== collectionToDelete.id));
       if (activeCollection === collectionToDelete.id) setActiveCollection(null);
+      if (activeKitCollection === collectionToDelete.id) setActiveKitCollection(null);
       toast.success("Collection deleted");
     }
     setCollectionToDelete(null);
+  };
+
+  const handleCreateKitCollection = async () => {
+    if (!user || !newKitCollectionName.trim()) return;
+    const { data, error } = await supabase
+      .from("collections")
+      .insert({ user_id: user.id, name: newKitCollectionName.trim(), kind: "gears" })
+      .select("id, name").single();
+    if (error || !data) { toast.error("Could not create"); return; }
+    setKitCollections((p) => [data, ...p]);
+    setNewKitCollectionName(""); setCreatingKitCollection(false);
+    toast.success(`Created "${data.name}"`);
+  };
+
+  const handleRemoveKitGear = async (kitId: string) => {
+    await supabase.from("kit_gears").delete().eq("id", kitId);
+    setKitGears((p) => p.filter((k) => k.id !== kitId));
+    toast.success("Removed from kit");
   };
 
 
@@ -361,12 +390,100 @@ const Profile = () => {
           </TabsContent>
 
           <TabsContent value="kit">
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
-              <div className="col-span-full flex flex-col items-center justify-center py-16 text-muted-foreground">
-                <p className="text-lg font-medium">No gear in your kit</p>
-                <p className="text-sm">Save gear from photos you love!</p>
+            <div className="mb-8">
+              <div className="mb-3 flex items-center justify-between">
+                <h2 className="text-sm font-semibold uppercase tracking-widest text-muted-foreground">Kit Collections</h2>
+                {!creatingKitCollection && (
+                  <Button size="sm" variant="outline" onClick={() => setCreatingKitCollection(true)} className="gap-1.5">
+                    <Plus className="h-3.5 w-3.5" /> New
+                  </Button>
+                )}
+              </div>
+
+              {creatingKitCollection && (
+                <div className="mb-4 flex gap-2">
+                  <Input
+                    autoFocus value={newKitCollectionName}
+                    onChange={(e) => setNewKitCollectionName(e.target.value)}
+                    placeholder="Collection name (e.g. Travel rig)"
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") handleCreateKitCollection();
+                      if (e.key === "Escape") { setCreatingKitCollection(false); setNewKitCollectionName(""); }
+                    }}
+                  />
+                  <Button onClick={handleCreateKitCollection} disabled={!newKitCollectionName.trim()}>Create</Button>
+                  <Button variant="ghost" onClick={() => { setCreatingKitCollection(false); setNewKitCollectionName(""); }}>Cancel</Button>
+                </div>
+              )}
+
+              <div className="flex flex-wrap gap-2">
+                <button
+                  onClick={() => setActiveKitCollection(null)}
+                  className={`inline-flex items-center gap-2 rounded-full border px-4 py-2 text-sm transition-colors ${activeKitCollection === null ? "border-primary bg-primary/10 text-foreground" : "border-border bg-secondary text-muted-foreground"}`}
+                >
+                  <FolderPlus className="h-4 w-4" /> All Gear ({kitGears.length})
+                </button>
+                {kitCollections.map((c) => {
+                  const count = kitGears.filter((k) => k.collection_id === c.id).length;
+                  return (
+                    <div key={c.id} className={`group inline-flex items-center gap-1 rounded-full border py-1 pl-3 pr-1 text-sm transition-colors ${activeKitCollection === c.id ? "border-primary bg-primary/10 text-foreground" : "border-border bg-secondary text-muted-foreground"}`}>
+                      <button onClick={() => setActiveKitCollection(c.id)} className="inline-flex items-center gap-1.5">
+                        <Folder className="h-4 w-4" /> {c.name} ({count})
+                      </button>
+                      <button onClick={() => setCollectionToDelete(c)} className="ml-1 flex h-5 w-5 items-center justify-center rounded-full opacity-0 transition-opacity group-hover:opacity-100 hover:bg-background hover:text-destructive">
+                        <X className="h-3 w-3" />
+                      </button>
+                    </div>
+                  );
+                })}
               </div>
             </div>
+
+            {(() => {
+              const TYPE_ICON: Record<string, any> = { camera: Camera, lens: LensIcon, phone: Smartphone, drone: Plane, lighting: Lightbulb, audio: Mic, tripod: Wrench, accessory: Package, other: Package };
+              const visible = activeKitCollection
+                ? kitGears.filter((k) => k.collection_id === activeKitCollection)
+                : kitGears;
+              if (visible.length === 0) {
+                return (
+                  <div className="flex flex-col items-center justify-center py-16 text-muted-foreground">
+                    <p className="text-lg font-medium">{activeKitCollection ? "This collection is empty" : "No gear in your kit yet"}</p>
+                    <p className="text-sm">Browse <Link to="/gears" className="text-primary hover:underline">Gears</Link> and tap "Save to My Kit".</p>
+                  </div>
+                );
+              }
+              return (
+                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+                  {visible.map((k) => {
+                    if (!k.gears) return null;
+                    const Icon = TYPE_ICON[k.gears.gear_type] || Package;
+                    return (
+                      <div key={k.id} className="group relative overflow-hidden rounded-xl border border-border bg-card transition-colors hover:border-primary/50">
+                        <Link to={`/gears/${k.gears.slug}`}>
+                          <div className="aspect-square bg-secondary/50 flex items-center justify-center">
+                            {k.gears.image_url ? (
+                              <img src={k.gears.image_url} alt={k.gears.name} className="h-full w-full object-cover" />
+                            ) : (
+                              <Icon className="h-10 w-10 text-muted-foreground/40" />
+                            )}
+                          </div>
+                          <div className="p-3">
+                            <p className="text-[10px] uppercase tracking-widest text-muted-foreground">{k.gears.gear_type}</p>
+                            <p className="text-sm font-semibold leading-tight truncate">{k.gears.name}</p>
+                          </div>
+                        </Link>
+                        <button
+                          onClick={() => handleRemoveKitGear(k.id)}
+                          className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity bg-destructive text-destructive-foreground rounded-full p-1.5"
+                        >
+                          <Trash2 className="h-3.5 w-3.5" />
+                        </button>
+                      </div>
+                    );
+                  })}
+                </div>
+              );
+            })()}
           </TabsContent>
         </Tabs>
       </main>

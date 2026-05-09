@@ -37,6 +37,9 @@ const Navbar = () => {
           <Link to="/vibe-matcher" className="text-sm font-medium text-muted-foreground transition-colors hover:text-foreground">
             Vibe Matcher
           </Link>
+          <Link to="/gears" className="text-sm font-medium text-muted-foreground transition-colors hover:text-foreground">
+            Gears
+          </Link>
           {user && (
             <Link to="/profile" className="text-sm font-medium text-muted-foreground transition-colors hover:text-foreground">
               My Profile

@@ -50,6 +50,7 @@ export type Database = {
         Row: {
           created_at: string
           id: string
+          kind: string
           name: string
           updated_at: string
           user_id: string
@@ -57,6 +58,7 @@ export type Database = {
         Insert: {
           created_at?: string
           id?: string
+          kind?: string
           name: string
           updated_at?: string
           user_id: string
@@ -64,11 +66,164 @@ export type Database = {
         Update: {
           created_at?: string
           id?: string
+          kind?: string
           name?: string
           updated_at?: string
           user_id?: string
         }
         Relationships: []
+      }
+      gear_retailers: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          gear_id: string
+          id: string
+          price: string | null
+          retailer: string
+          url: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          gear_id: string
+          id?: string
+          price?: string | null
+          retailer: string
+          url: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          gear_id?: string
+          id?: string
+          price?: string | null
+          retailer?: string
+          url?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "gear_retailers_gear_id_fkey"
+            columns: ["gear_id"]
+            isOneToOne: false
+            referencedRelation: "gears"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      gears: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          description: string | null
+          gear_type: string
+          id: string
+          image_url: string | null
+          name: string
+          slug: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          gear_type?: string
+          id?: string
+          image_url?: string | null
+          name: string
+          slug: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          gear_type?: string
+          id?: string
+          image_url?: string | null
+          name?: string
+          slug?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      kit_gears: {
+        Row: {
+          collection_id: string | null
+          created_at: string
+          gear_id: string
+          id: string
+          user_id: string
+        }
+        Insert: {
+          collection_id?: string | null
+          created_at?: string
+          gear_id: string
+          id?: string
+          user_id: string
+        }
+        Update: {
+          collection_id?: string | null
+          created_at?: string
+          gear_id?: string
+          id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "kit_gears_collection_id_fkey"
+            columns: ["collection_id"]
+            isOneToOne: false
+            referencedRelation: "collections"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "kit_gears_gear_id_fkey"
+            columns: ["gear_id"]
+            isOneToOne: false
+            referencedRelation: "gears"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      photo_gears: {
+        Row: {
+          created_at: string
+          gear_id: string
+          id: string
+          photo_id: string
+          position: number
+        }
+        Insert: {
+          created_at?: string
+          gear_id: string
+          id?: string
+          photo_id: string
+          position?: number
+        }
+        Update: {
+          created_at?: string
+          gear_id?: string
+          id?: string
+          photo_id?: string
+          position?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "photo_gears_gear_id_fkey"
+            columns: ["gear_id"]
+            isOneToOne: false
+            referencedRelation: "gears"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "photo_gears_photo_id_fkey"
+            columns: ["photo_id"]
+            isOneToOne: false
+            referencedRelation: "photos"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       photos: {
         Row: {

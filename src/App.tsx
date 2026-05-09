@@ -18,6 +18,8 @@ import Settings from "./pages/Settings";
 import Help from "./pages/Help";
 import NotFound from "./pages/NotFound";
 import UserProfile from "./pages/UserProfile";
+import Gears from "./pages/Gears";
+import GearDetail from "./pages/GearDetail";
 
 const queryClient = new QueryClient();
 
@@ -40,6 +42,8 @@ const App = () => (
             <Route path="/edit-profile" element={<ProtectedRoute><EditProfile /></ProtectedRoute>} />
             <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
             <Route path="/help" element={<Help />} />
+            <Route path="/gears" element={<Gears />} />
+            <Route path="/gears/:slug" element={<GearDetail />} />
             <Route path="/:username" element={<UserProfile />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
