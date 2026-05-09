@@ -149,19 +149,30 @@ const PhotoCard = ({ id, image, caption, username, gear, aperture, iso }: PhotoC
           >
             @{username}
           </Link>
-          <p className="text-xs text-text-hint">{gear}</p>
+          <Link
+            to={`/explore?q=${encodeURIComponent(gear)}`}
+            className="block text-xs text-text-hint transition-colors hover:text-foreground"
+          >
+            {gear}
+          </Link>
 
           {(aperture || iso) && (
             <div className="mt-2 flex gap-2">
               {aperture && (
-                <span className="rounded-md bg-secondary px-2 py-0.5 text-xs text-muted-foreground">
+                <Link
+                  to={`/explore?q=${encodeURIComponent(aperture)}`}
+                  className="rounded-md bg-secondary px-2 py-0.5 text-xs text-muted-foreground transition-colors hover:text-foreground"
+                >
                   {aperture}
-                </span>
+                </Link>
               )}
               {iso && (
-                <span className="rounded-md bg-secondary px-2 py-0.5 text-xs text-muted-foreground">
+                <Link
+                  to={`/explore?q=${encodeURIComponent(`ISO ${iso}`)}`}
+                  className="rounded-md bg-secondary px-2 py-0.5 text-xs text-muted-foreground transition-colors hover:text-foreground"
+                >
                   ISO {iso}
-                </span>
+                </Link>
               )}
             </div>
           )}
