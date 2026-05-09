@@ -43,6 +43,11 @@ const PhotoDetail = () => {
     { id: "c2", user: "analog_soul", text: "What time of day was this shot?", likes: 1, likedByMe: false },
   ]);
 
+  // Scroll to top whenever we open a new photo
+  useEffect(() => {
+    window.scrollTo({ top: 0, left: 0, behavior: "auto" });
+  }, [id]);
+
   // Check saved state
   useEffect(() => {
     if (!user || !id) return;
@@ -173,14 +178,15 @@ const PhotoDetail = () => {
           {/* Main image */}
           <div className="flex items-center justify-center overflow-hidden rounded-xl border border-border bg-secondary/30">
             <img
+              key={id}
               src={photo.image}
               alt={photo.caption || "Community photo"}
-              className="max-h-[80vh] w-auto max-w-full object-contain"
+              className="max-h-[80vh] w-auto max-w-full object-contain animate-fade-in"
             />
           </div>
 
           {/* Sidebar */}
-          <div className="flex flex-col gap-6">
+          <div key={id} className="flex flex-col gap-6 animate-fade-in-soft">
             {/* Uploader info */}
             <div className="rounded-xl border border-border bg-card p-5">
               <div className="flex items-center justify-between">
