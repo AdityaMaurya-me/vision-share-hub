@@ -10,6 +10,7 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import {
   ArrowLeft, UserPlus, Send, Camera, Aperture, Gauge,
   Heart, Share2, Bookmark, MoreHorizontal, Download, Flag, Trash2, Aperture as LensIcon, FolderPlus,
+  Smartphone, Plane, Lightbulb, Mic, Wrench, Package,
 } from "lucide-react";
 import AddToCollectionDialog from "@/components/AddToCollectionDialog";
 import ReportDialog from "@/components/ReportDialog";
@@ -24,6 +25,16 @@ import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { useEffect } from "react";
+import { parseLegacyGear, slugify, GearType } from "@/lib/gear";
+
+const TYPE_ICON: Record<string, any> = {
+  camera: Camera, lens: LensIcon, phone: Smartphone, drone: Plane,
+  lighting: Lightbulb, audio: Mic, tripod: Wrench, accessory: Package, other: Package,
+};
+const TYPE_LABEL: Record<string, string> = {
+  camera: "Camera Body", lens: "Lens", phone: "Phone", drone: "Drone",
+  lighting: "Lighting", audio: "Audio", tripod: "Tripod / Rig", accessory: "Accessory", other: "Gear",
+};
 
 const PhotoDetail = () => {
   const { id } = useParams<{ id: string }>();
@@ -272,65 +283,63 @@ const PhotoDetail = () => {
             </div>
 
             {/* Tags */}
-            {((photo.tags && photo.tags.length > 0) || photo.gear) && (() => {
-              const gearStr = photo.gear || "";
-              const [bodyPart, lensPart] = gearStr.split(" + ").map((s) => s.trim());
-              const brand = bodyPart ? bodyPart.split(" ")[0] : "";
-              const lens = lensPart || "";
-              return (
-                <div className="rounded-xl border border-border bg-card p-5">
-                  <h3 className="mb-3 text-xs font-semibold uppercase tracking-widest text-muted-foreground">
-                    Tags
-                  </h3>
-                  <div className="flex flex-wrap gap-2">
-                    {brand && (
-                      <Link
-                        to={`/explore?q=${encodeURIComponent(brand)}`}
-                        className="inline-flex items-center gap-1 rounded-full border border-border bg-secondary px-3 py-1 text-xs text-muted-foreground transition-colors hover:border-primary/50 hover:text-foreground"
-                      >
-                        <Camera className="h-3 w-3" /> {brand}
-                      </Link>
-                    )}
-                    {lens && (
-                      <Link
-                        to={`/explore?q=${encodeURIComponent(lens)}`}
-                        className="inline-flex items-center gap-1 rounded-full border border-border bg-secondary px-3 py-1 text-xs text-muted-foreground transition-colors hover:border-primary/50 hover:text-foreground"
-                      >
-                        <LensIcon className="h-3 w-3" /> {lens}
-                      </Link>
-                    )}
-                    {photo.tags?.map((tag) => (
-                      <Link
-                        key={tag}
-                        to={`/explore?q=${encodeURIComponent(tag)}`}
-                        className="inline-flex items-center rounded-full border border-border bg-secondary px-3 py-1 text-xs text-muted-foreground transition-colors hover:border-primary/50 hover:text-foreground"
-                      >
-                        {getVibeLabel(tag)}
-                      </Link>
-                    ))}
-                  </div>
+            {photo.tags && photo.tags.length > 0 && (
+              <div className="rounded-xl border border-border bg-card p-5">
+                <h3 className="mb-3 text-xs font-semibold uppercase tracking-widest text-muted-foreground">
+                  Tags
+                </h3>
+                <div className="flex flex-wrap gap-2">
+                  {photo.tags.map((tag) => (
+                    <Link
+                      key={tag}
+                      to={`/explore?q=${encodeURIComponent(tag)}`}
+                      className="inline-flex items-center rounded-full border border-border bg-secondary px-3 py-1 text-xs text-muted-foreground transition-colors hover:border-primary/50 hover:text-foreground"
+                    >
+                      {getVibeLabel(tag)}
+                    </Link>
+                  ))}
                 </div>
-              );
-            })()}
+              </div>
+            )}
 
-            {/* Gear details */}
-            <div className="rounded-xl border border-border bg-card p-5">
-              <h3 className="mb-3 text-xs font-semibold uppercase tracking-widest text-muted-foreground">
-                Gear & Settings
-              </h3>
-              <Link
-                to={`/explore?q=${encodeURIComponent(photo.gear)}`}
-                className="flex items-center gap-2 text-sm transition-colors hover:text-primary"
-              >
-                <Camera className="h-4 w-4 text-muted-foreground" />
-                <span>{photo.gear}</span>
-              </Link>
-              {(photo.aperture || photo.iso) && (
-                <div className="mt-3 flex flex-wrap gap-2">
+            {/* Gear: split per item, each links to its gear page */}
+            {photo.gear && (
+              <div className="rounded-xl border border-border bg-card p-5">
+                <h3 className="mb-3 text-xs font-semibold uppercase tracking-widest text-muted-foreground">
+                  Gear
+                </h3>
+                <div className="space-y-2">
+                  {parseLegacyGear(photo.gear).map((g, i) => {
+                    const Icon = TYPE_ICON[g.type] || Package;
+                    return (
+                      <Link
+                        key={i}
+                        to={`/gears/${slugify(g.name)}`}
+                        className="flex items-center gap-3 rounded-lg border border-border bg-secondary/50 px-3 py-2.5 text-sm transition-colors hover:border-primary/50 hover:bg-secondary"
+                      >
+                        <Icon className="h-4 w-4 text-muted-foreground" />
+                        <div className="min-w-0 flex-1">
+                          <p className="text-[10px] uppercase tracking-widest text-muted-foreground">{TYPE_LABEL[g.type]}</p>
+                          <p className="truncate font-medium">{g.name}</p>
+                        </div>
+                      </Link>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+
+            {/* Settings */}
+            {(photo.aperture || photo.iso) && (
+              <div className="rounded-xl border border-border bg-card p-5">
+                <h3 className="mb-3 text-xs font-semibold uppercase tracking-widest text-muted-foreground">
+                  Settings
+                </h3>
+                <div className="flex flex-wrap gap-2">
                   {photo.aperture && (
                     <Link
                       to={`/explore?q=${encodeURIComponent(photo.aperture)}`}
-                      className="inline-flex items-center gap-1.5 rounded-md bg-secondary px-2.5 py-1 text-xs text-muted-foreground transition-colors hover:border-primary/50 hover:text-foreground border border-transparent"
+                      className="inline-flex items-center gap-1.5 rounded-md border border-transparent bg-secondary px-2.5 py-1 text-xs text-muted-foreground transition-colors hover:border-primary/50 hover:text-foreground"
                     >
                       <Aperture className="h-3 w-3" />
                       {photo.aperture}
@@ -339,15 +348,15 @@ const PhotoDetail = () => {
                   {photo.iso && (
                     <Link
                       to={`/explore?q=${encodeURIComponent(`ISO ${photo.iso}`)}`}
-                      className="inline-flex items-center gap-1.5 rounded-md bg-secondary px-2.5 py-1 text-xs text-muted-foreground transition-colors hover:border-primary/50 hover:text-foreground border border-transparent"
+                      className="inline-flex items-center gap-1.5 rounded-md border border-transparent bg-secondary px-2.5 py-1 text-xs text-muted-foreground transition-colors hover:border-primary/50 hover:text-foreground"
                     >
                       <Gauge className="h-3 w-3" />
                       ISO {photo.iso}
                     </Link>
                   )}
                 </div>
-              )}
-            </div>
+              </div>
+            )}
 
             {/* Comments */}
             <div className="rounded-xl border border-border bg-card p-5">
