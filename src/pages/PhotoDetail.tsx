@@ -178,9 +178,10 @@ const PhotoDetail = () => {
           {/* Main image */}
           <div className="flex items-center justify-center overflow-hidden rounded-xl border border-border bg-secondary/30">
             <img
+              key={id}
               src={photo.image}
               alt={photo.caption || "Community photo"}
-              className="max-h-[80vh] w-auto max-w-full object-contain"
+              className="max-h-[80vh] w-auto max-w-full object-contain animate-fade-in"
             />
           </div>
 
