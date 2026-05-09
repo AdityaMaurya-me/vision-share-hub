@@ -133,30 +133,45 @@ const Profile = () => {
     if (!user || !newCollectionName.trim()) return;
     const { data, error } = await supabase
       .from("collections")
-      .insert({ user_id: user.id, name: newCollectionName.trim() })
+      .insert({ user_id: user.id, name: newCollectionName.trim(), kind: "photos" })
       .select("id, name")
       .single();
-    if (error || !data) {
-      toast.error("Could not create collection");
-      return;
-    }
+    if (error || !data) { toast.error("Could not create collection"); return; }
     setCollections((prev) => [data, ...prev]);
-    setNewCollectionName("");
-    setCreatingCollection(false);
+    setNewCollectionName(""); setCreatingCollection(false);
     toast.success(`Created "${data.name}"`);
   };
 
   const handleDeleteCollection = async () => {
     if (!collectionToDelete) return;
     const { error } = await supabase.from("collections").delete().eq("id", collectionToDelete.id);
-    if (error) {
-      toast.error("Could not delete");
-    } else {
+    if (error) { toast.error("Could not delete"); }
+    else {
       setCollections((prev) => prev.filter((c) => c.id !== collectionToDelete.id));
+      setKitCollections((prev) => prev.filter((c) => c.id !== collectionToDelete.id));
       if (activeCollection === collectionToDelete.id) setActiveCollection(null);
+      if (activeKitCollection === collectionToDelete.id) setActiveKitCollection(null);
       toast.success("Collection deleted");
     }
     setCollectionToDelete(null);
+  };
+
+  const handleCreateKitCollection = async () => {
+    if (!user || !newKitCollectionName.trim()) return;
+    const { data, error } = await supabase
+      .from("collections")
+      .insert({ user_id: user.id, name: newKitCollectionName.trim(), kind: "gears" })
+      .select("id, name").single();
+    if (error || !data) { toast.error("Could not create"); return; }
+    setKitCollections((p) => [data, ...p]);
+    setNewKitCollectionName(""); setCreatingKitCollection(false);
+    toast.success(`Created "${data.name}"`);
+  };
+
+  const handleRemoveKitGear = async (kitId: string) => {
+    await supabase.from("kit_gears").delete().eq("id", kitId);
+    setKitGears((p) => p.filter((k) => k.id !== kitId));
+    toast.success("Removed from kit");
   };
 
 
