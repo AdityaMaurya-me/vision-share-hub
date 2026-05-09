@@ -185,7 +185,7 @@ const PhotoDetail = () => {
           </div>
 
           {/* Sidebar */}
-          <div className="flex flex-col gap-6">
+          <div key={id} className="flex flex-col gap-6 animate-fade-in-soft">
             {/* Uploader info */}
             <div className="rounded-xl border border-border bg-card p-5">
               <div className="flex items-center justify-between">
