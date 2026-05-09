@@ -43,6 +43,11 @@ const PhotoDetail = () => {
     { id: "c2", user: "analog_soul", text: "What time of day was this shot?", likes: 1, likedByMe: false },
   ]);
 
+  // Scroll to top whenever we open a new photo
+  useEffect(() => {
+    window.scrollTo({ top: 0, left: 0, behavior: "auto" });
+  }, [id]);
+
   // Check saved state
   useEffect(() => {
     if (!user || !id) return;
