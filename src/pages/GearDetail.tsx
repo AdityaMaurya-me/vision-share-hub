@@ -19,6 +19,7 @@ import { GEAR_TYPES } from "@/lib/gear";
 interface Gear {
   id: string; slug: string; name: string; gear_type: string;
   image_url: string | null; description: string | null; created_by: string | null;
+  created_at?: string; updated_at?: string;
 }
 interface Retailer { id: string; retailer: string; price: string | null; url: string; created_by: string | null; }
 interface PhotoRow { id: string; image_url: string; caption: string | null; }
