@@ -160,9 +160,41 @@ const GearDetail = () => {
 
           <div className="space-y-5">
             <div>
-              <p className="text-xs uppercase tracking-widest text-muted-foreground">{gear.gear_type}</p>
+              <p className="text-xs uppercase tracking-widest text-primary/80">
+                {GEAR_TYPES.find((t) => t.value === gear.gear_type)?.label || gear.gear_type}
+              </p>
               <h1 className="mt-1 text-3xl font-bold tracking-tight">{gear.name}</h1>
             </div>
+
+            <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+              <div className="rounded-lg border border-border bg-secondary/40 px-3 py-2">
+                <p className="text-[10px] uppercase tracking-widest text-muted-foreground">Shots</p>
+                <p className="mt-0.5 text-lg font-semibold">{shotsCount}</p>
+              </div>
+              <div className="rounded-lg border border-border bg-secondary/40 px-3 py-2">
+                <p className="text-[10px] uppercase tracking-widest text-muted-foreground">In kits</p>
+                <p className="mt-0.5 text-lg font-semibold">{kitCount}</p>
+              </div>
+              <div className="rounded-lg border border-border bg-secondary/40 px-3 py-2">
+                <p className="text-[10px] uppercase tracking-widest text-muted-foreground">Retailers</p>
+                <p className="mt-0.5 text-lg font-semibold">{retailers.length}</p>
+              </div>
+              <div className="rounded-lg border border-border bg-secondary/40 px-3 py-2">
+                <p className="text-[10px] uppercase tracking-widest text-muted-foreground">Added</p>
+                <p className="mt-0.5 text-sm font-medium">
+                  {gear.created_at ? new Date(gear.created_at).toLocaleDateString(undefined, { month: "short", year: "numeric" }) : "—"}
+                </p>
+              </div>
+            </div>
+
+            {contributor?.username && (
+              <p className="text-xs text-muted-foreground">
+                Contributed by{" "}
+                <Link to={`/${contributor.username}`} className="text-foreground hover:text-primary">
+                  @{contributor.username}
+                </Link>
+              </p>
+            )}
 
             <div className="flex flex-wrap items-center gap-2">
               <Button
