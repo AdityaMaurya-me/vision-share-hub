@@ -1,8 +1,10 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import { Helmet } from "react-helmet-async";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import Navbar from "@/components/Navbar";
+import GoogleButton from "@/components/GoogleButton";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
 
@@ -29,14 +31,31 @@ const Login = () => {
 
   return (
     <div className="min-h-screen bg-background">
+      <Helmet>
+        <title>Log in — VisionX</title>
+        <meta name="description" content="Sign in to VisionX to share shots, save gear and follow photographers." />
+        <link rel="canonical" href="/login" />
+      </Helmet>
       <Navbar />
       <main className="flex items-center justify-center pt-32 px-4">
         <div className="w-full max-w-md rounded-xl border border-border bg-card p-8">
           <h1 className="text-2xl font-bold">Log In</h1>
           <p className="mt-1 text-sm text-muted-foreground">Welcome back to VisionX</p>
-          <form className="mt-6 space-y-4" onSubmit={handleSubmit}>
+
+          <div className="mt-6 space-y-3">
+            <GoogleButton label="Log in with Google" />
+            <div className="relative my-2 text-center text-[10px] uppercase tracking-widest text-muted-foreground">
+              <span className="bg-card px-2 relative z-10">or</span>
+              <div className="absolute left-0 right-0 top-1/2 h-px bg-border -z-0" />
+            </div>
+          </div>
+
+          <form className="space-y-4" onSubmit={handleSubmit}>
             <Input type="email" placeholder="Email" value={email} onChange={(e) => setEmail(e.target.value)} className="bg-secondary border-border" />
             <Input type="password" placeholder="Password" value={password} onChange={(e) => setPassword(e.target.value)} className="bg-secondary border-border" />
+            <div className="flex justify-end">
+              <Link to="/forgot-password" className="text-xs text-muted-foreground hover:text-primary">Forgot password?</Link>
+            </div>
             <Button type="submit" disabled={loading} className="w-full gradient-bg border-0 text-primary-foreground">
               {loading ? "Logging in..." : "Log In"}
             </Button>
