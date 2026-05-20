@@ -8,6 +8,8 @@ import ProtectedRoute from "@/components/ProtectedRoute";
 import Index from "./pages/Index";
 import Login from "./pages/Login";
 import Signup from "./pages/Signup";
+import ForgotPassword from "./pages/ForgotPassword";
+import ResetPassword from "./pages/ResetPassword";
 import VibeMatcher from "./pages/VibeMatcher";
 import PhotoDetail from "./pages/PhotoDetail";
 import Profile from "./pages/Profile";
@@ -16,6 +18,8 @@ import Explore from "./pages/Explore";
 import EditProfile from "./pages/EditProfile";
 import Settings from "./pages/Settings";
 import Help from "./pages/Help";
+import Terms from "./pages/Terms";
+import Privacy from "./pages/Privacy";
 import NotFound from "./pages/NotFound";
 import UserProfile from "./pages/UserProfile";
 import Gears from "./pages/Gears";
@@ -34,6 +38,8 @@ const App = () => (
             <Route path="/" element={<Index />} />
             <Route path="/login" element={<Login />} />
             <Route path="/signup" element={<Signup />} />
+            <Route path="/forgot-password" element={<ForgotPassword />} />
+            <Route path="/reset-password" element={<ResetPassword />} />
             <Route path="/explore" element={<Explore />} />
             <Route path="/vibe-matcher" element={<VibeMatcher />} />
             <Route path="/photo/:id" element={<PhotoDetail />} />
@@ -42,6 +48,8 @@ const App = () => (
             <Route path="/edit-profile" element={<ProtectedRoute><EditProfile /></ProtectedRoute>} />
             <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
             <Route path="/help" element={<Help />} />
+            <Route path="/terms" element={<Terms />} />
+            <Route path="/privacy" element={<Privacy />} />
             <Route path="/gears" element={<Gears />} />
             <Route path="/gears/:slug" element={<GearDetail />} />
             <Route path="/:username" element={<UserProfile />} />
