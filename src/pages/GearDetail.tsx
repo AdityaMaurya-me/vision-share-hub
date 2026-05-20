@@ -19,6 +19,7 @@ import { GEAR_TYPES } from "@/lib/gear";
 interface Gear {
   id: string; slug: string; name: string; gear_type: string;
   image_url: string | null; description: string | null; created_by: string | null;
+  created_at?: string; updated_at?: string;
 }
 interface Retailer { id: string; retailer: string; price: string | null; url: string; created_by: string | null; }
 interface PhotoRow { id: string; image_url: string; caption: string | null; }
@@ -36,25 +37,27 @@ const GearDetail = () => {
   const [showAddRetailer, setShowAddRetailer] = useState(false);
   const [newRet, setNewRet] = useState({ retailer: "", price: "", url: "" });
   const [edit, setEdit] = useState({ image_url: "", description: "", gear_type: "other" });
+  const [shotsCount, setShotsCount] = useState(0);
+  const [kitCount, setKitCount] = useState(0);
+  const [contributor, setContributor] = useState<{ username: string | null; avatar_url: string | null } | null>(null);
 
   const loadAll = async () => {
     if (!slug) return;
     setLoading(true);
     let { data: g } = await supabase
       .from("gears")
-      .select("id, slug, name, gear_type, image_url, description, created_by")
+      .select("id, slug, name, gear_type, image_url, description, created_by, created_at, updated_at")
       .eq("slug", slug)
       .maybeSingle();
 
     // Auto-create a stub if a signed-in user lands on a missing slug
-    // (e.g. coming from a sample-photo gear link)
     if (!g && user) {
       const name = slug.split("-").map((w) => w.charAt(0).toUpperCase() + w.slice(1)).join(" ");
       const { guessGearType } = await import("@/lib/gear");
       const { data: created } = await supabase
         .from("gears")
         .insert({ slug, name, gear_type: guessGearType(name), created_by: user.id })
-        .select("id, slug, name, gear_type, image_url, description, created_by")
+        .select("id, slug, name, gear_type, image_url, description, created_by, created_at, updated_at")
         .single();
       g = created;
     }
@@ -62,13 +65,21 @@ const GearDetail = () => {
     setGear(g);
     if (g) {
       setEdit({ image_url: g.image_url || "", description: g.description || "", gear_type: g.gear_type });
-      const [{ data: rs }, { data: pgs }] = await Promise.all([
+      const [{ data: rs }, { data: pgs }, { count: shots }, { count: kits }, { data: prof }] = await Promise.all([
         supabase.from("gear_retailers").select("*").eq("gear_id", g.id).order("created_at"),
         supabase.from("photo_gears").select("photos:photo_id(id, image_url, caption)").eq("gear_id", g.id).limit(12),
+        supabase.from("photo_gears").select("*", { count: "exact", head: true }).eq("gear_id", g.id),
+        supabase.from("kit_gears").select("*", { count: "exact", head: true }).eq("gear_id", g.id),
+        g.created_by
+          ? supabase.from("profiles").select("username, avatar_url").eq("user_id", g.created_by).maybeSingle()
+          : Promise.resolve({ data: null } as any),
       ]);
       setRetailers(rs || []);
       // @ts-ignore relational join
       setPhotos((pgs || []).map((r: any) => r.photos).filter(Boolean));
+      setShotsCount(shots || 0);
+      setKitCount(kits || 0);
+      setContributor(prof || null);
       if (user) {
         const { data: kit } = await supabase
           .from("kit_gears")
@@ -149,9 +160,41 @@ const GearDetail = () => {
 
           <div className="space-y-5">
             <div>
-              <p className="text-xs uppercase tracking-widest text-muted-foreground">{gear.gear_type}</p>
+              <p className="text-xs uppercase tracking-widest text-primary/80">
+                {GEAR_TYPES.find((t) => t.value === gear.gear_type)?.label || gear.gear_type}
+              </p>
               <h1 className="mt-1 text-3xl font-bold tracking-tight">{gear.name}</h1>
             </div>
+
+            <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+              <div className="rounded-lg border border-border bg-secondary/40 px-3 py-2">
+                <p className="text-[10px] uppercase tracking-widest text-muted-foreground">Shots</p>
+                <p className="mt-0.5 text-lg font-semibold">{shotsCount}</p>
+              </div>
+              <div className="rounded-lg border border-border bg-secondary/40 px-3 py-2">
+                <p className="text-[10px] uppercase tracking-widest text-muted-foreground">In kits</p>
+                <p className="mt-0.5 text-lg font-semibold">{kitCount}</p>
+              </div>
+              <div className="rounded-lg border border-border bg-secondary/40 px-3 py-2">
+                <p className="text-[10px] uppercase tracking-widest text-muted-foreground">Retailers</p>
+                <p className="mt-0.5 text-lg font-semibold">{retailers.length}</p>
+              </div>
+              <div className="rounded-lg border border-border bg-secondary/40 px-3 py-2">
+                <p className="text-[10px] uppercase tracking-widest text-muted-foreground">Added</p>
+                <p className="mt-0.5 text-sm font-medium">
+                  {gear.created_at ? new Date(gear.created_at).toLocaleDateString(undefined, { month: "short", year: "numeric" }) : "—"}
+                </p>
+              </div>
+            </div>
+
+            {contributor?.username && (
+              <p className="text-xs text-muted-foreground">
+                Contributed by{" "}
+                <Link to={`/${contributor.username}`} className="text-foreground hover:text-primary">
+                  @{contributor.username}
+                </Link>
+              </p>
+            )}
 
             <div className="flex flex-wrap items-center gap-2">
               <Button
