@@ -46,19 +46,18 @@ const GearDetail = () => {
     setLoading(true);
     let { data: g } = await supabase
       .from("gears")
-      .select("id, slug, name, gear_type, image_url, description, created_by")
+      .select("id, slug, name, gear_type, image_url, description, created_by, created_at, updated_at")
       .eq("slug", slug)
       .maybeSingle();
 
     // Auto-create a stub if a signed-in user lands on a missing slug
-    // (e.g. coming from a sample-photo gear link)
     if (!g && user) {
       const name = slug.split("-").map((w) => w.charAt(0).toUpperCase() + w.slice(1)).join(" ");
       const { guessGearType } = await import("@/lib/gear");
       const { data: created } = await supabase
         .from("gears")
         .insert({ slug, name, gear_type: guessGearType(name), created_by: user.id })
-        .select("id, slug, name, gear_type, image_url, description, created_by")
+        .select("id, slug, name, gear_type, image_url, description, created_by, created_at, updated_at")
         .single();
       g = created;
     }
@@ -66,13 +65,21 @@ const GearDetail = () => {
     setGear(g);
     if (g) {
       setEdit({ image_url: g.image_url || "", description: g.description || "", gear_type: g.gear_type });
-      const [{ data: rs }, { data: pgs }] = await Promise.all([
+      const [{ data: rs }, { data: pgs }, { count: shots }, { count: kits }, { data: prof }] = await Promise.all([
         supabase.from("gear_retailers").select("*").eq("gear_id", g.id).order("created_at"),
         supabase.from("photo_gears").select("photos:photo_id(id, image_url, caption)").eq("gear_id", g.id).limit(12),
+        supabase.from("photo_gears").select("*", { count: "exact", head: true }).eq("gear_id", g.id),
+        supabase.from("kit_gears").select("*", { count: "exact", head: true }).eq("gear_id", g.id),
+        g.created_by
+          ? supabase.from("profiles").select("username, avatar_url").eq("user_id", g.created_by).maybeSingle()
+          : Promise.resolve({ data: null } as any),
       ]);
       setRetailers(rs || []);
       // @ts-ignore relational join
       setPhotos((pgs || []).map((r: any) => r.photos).filter(Boolean));
+      setShotsCount(shots || 0);
+      setKitCount(kits || 0);
+      setContributor(prof || null);
       if (user) {
         const { data: kit } = await supabase
           .from("kit_gears")
