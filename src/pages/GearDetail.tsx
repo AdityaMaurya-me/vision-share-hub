@@ -37,6 +37,9 @@ const GearDetail = () => {
   const [showAddRetailer, setShowAddRetailer] = useState(false);
   const [newRet, setNewRet] = useState({ retailer: "", price: "", url: "" });
   const [edit, setEdit] = useState({ image_url: "", description: "", gear_type: "other" });
+  const [shotsCount, setShotsCount] = useState(0);
+  const [kitCount, setKitCount] = useState(0);
+  const [contributor, setContributor] = useState<{ username: string | null; avatar_url: string | null } | null>(null);
 
   const loadAll = async () => {
     if (!slug) return;
