@@ -141,6 +141,11 @@ const Explore = () => {
 
   return (
     <div className="min-h-screen bg-background">
+      <Helmet>
+        <title>Explore photography — VisionX</title>
+        <meta name="description" content="Search photos by camera, lens, aperture, ISO and tags. Discover gear from real shooters." />
+        <link rel="canonical" href="/explore" />
+      </Helmet>
       <Navbar />
       <main className="container pt-24 pb-16">
         <BackButton />
