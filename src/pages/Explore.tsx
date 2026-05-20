@@ -1,5 +1,6 @@
 import { useState, useMemo, useEffect } from "react";
 import { useSearchParams } from "react-router-dom";
+import { Helmet } from "react-helmet-async";
 import Navbar from "@/components/Navbar";
 import BackButton from "@/components/BackButton";
 import PhotoCard from "@/components/PhotoCard";
@@ -140,6 +141,11 @@ const Explore = () => {
 
   return (
     <div className="min-h-screen bg-background">
+      <Helmet>
+        <title>Explore photography — VisionX</title>
+        <meta name="description" content="Search photos by camera, lens, aperture, ISO and tags. Discover gear from real shooters." />
+        <link rel="canonical" href="/explore" />
+      </Helmet>
       <Navbar />
       <main className="container pt-24 pb-16">
         <BackButton />

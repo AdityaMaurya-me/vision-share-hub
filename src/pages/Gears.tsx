@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
+import { Helmet } from "react-helmet-async";
 import Navbar from "@/components/Navbar";
 import BackButton from "@/components/BackButton";
 import { Input } from "@/components/ui/input";
@@ -41,6 +42,11 @@ const Gears = () => {
 
   return (
     <div className="min-h-screen bg-background">
+      <Helmet>
+        <title>Gear catalog — VisionX</title>
+        <meta name="description" content="Browse cameras, lenses, phones and accessories used by the VisionX community. See real shots taken with each piece of gear." />
+        <link rel="canonical" href="/gears" />
+      </Helmet>
       <Navbar />
       <main className="container pt-24 pb-16">
         <BackButton />
